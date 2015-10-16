@@ -1,0 +1,100 @@
+{
+	"familyAttributes": [
+	],
+	"personAttributes": [
+		{"attributeId": 2073, "required": true },
+		{"attributeId": 174, "required": false },
+		{"attributeId": 714, "required": true },
+		{"attributeId": 1117, "required": false },
+		{"attributeId": 1032, "required": true },
+		{"attributeId": 1059, "required": false }
+	],
+	
+	"requireFamilyAddress": false,
+	"requireChildBirthdate": true,
+	"requireAdultBirthdate": false,
+	"requireChildGrade": true,
+	"firstVisitPrompt": false,
+	
+	"visualSettings": 
+	{
+	    "BackgroundColor" : "#dcd5cbff",
+		"LogoURL" : "~/Assets/FamilyManagerThemes/RockDefault/rock-logo.png",
+		"AdultMaleNoPhoto" : "~/Assets/FamilymanagerThemes/RockDefault/photo-adult-male.png",
+		"AdultFemaleNoPhoto" : "~/Assets/FamilyManagerThemes/RockDefault/photo-adult-female.png",
+		"ChildMaleNoPhoto" : "~/Assets/FamilyManagerThemes/RockDefault/photo-child-male.png",
+		"ChildFemaleNoPhoto" : "~/Assets/FamilyManagerThemes/RockDefault/photo-child-female.png",
+		
+		"TopHeaderBGColor" : "#282526FF",
+		"TopHeaderTextColor" : "#d3cec5FF",
+		
+		"FooterBGColor" : "#c2b8a7FF",
+		"FooterTextColor" : "#847f77FF",
+	
+		"SelectedPersonColor" : "#ee7624FF",
+		
+		"LargeFontSize" : "18",
+		"MediumFontSize" : "20",
+		"SmallFontSize" : "14",
+				
+		"DefaultButtonStyle" :
+		{
+			"BackgroundColor" : "#d6d6d6FF",
+			"TextColor" : "#524c43FF",
+			"BorderColor" : "#c2b8a7FF",
+			"BorderWidth" : "1",
+			"CornerRadius" : "4"
+		 },
+		 "PrimaryButtonStyle" : 
+		 {
+		 	"BackgroundColor" : "#ee7624FF",
+			"TextColor" : "#FFFFFFFF",
+			"BorderColor" : "#ae4f0dff",
+			"BorderWidth" : "1",
+			"CornerRadius" : "4"
+		 },
+		 "FamilyCellStyle":
+		 {
+		 	"BackgroundColor" : "#00000000",
+			"AddFamilyButtonBGColor" : "#c2b8a7FF",
+			"AddFamilyButtonTextColor" : "#554e51FF",
+			"EntryBGColor" : "#c2b8a7FF",
+			"EntryTextColor" : "#554e51FF",
+		 },
+		 "ToggleStyle" :
+		 {
+		 	"ActiveColor" : "#ee7624FF",
+			 "InActiveColor" : "#777777FF",
+			 "TextColor" : "#FFFFFFFF",
+			 "CornerRadius" : "4"
+		 },
+		 "DatePickerStyle" :
+		 {
+			"BackgroundColor" : "#c2b8a7FF",
+			"TextColor" : "#3b3b3bFF",
+			"Size" : "22",
+			"Font" : "OpenSans-Regular"
+		 },
+		 "LabelStyle" :
+		 {
+		 	"TextColor" : "#6a6a6aFF",
+		 },
+		 "SwitchStyle" :
+		 {
+		 	"OnColor" : "#FFFFFFFF"
+		 },
+		 "TextFieldStyle" :
+		 {
+		 	"TextColor" : "#555555FF",
+			"PlaceHolderColor" : "#AAAAAAFF",
+			"BorderColor" : "#ccccccFF",
+			"BorderWidth" : "1",
+			"CornerRadius" : "4",
+		 },
+		 "SearchResultStyle":
+		 {
+		 	"BackgroundColor" : "#c2b8a7FF",
+			"TextColor" : "#3b3b3bFF"
+		 }
+	}
+}

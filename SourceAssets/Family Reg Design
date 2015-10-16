@@ -1,0 +1,66 @@
+Shell
+	Nav Toolbar Top
+		Campus Select
+	Bottom Status Bar
+		Family browse history (tappable)
+
+	Search Page
+		Split View
+			Search Family / Refresh Family
+				List for springyness
+				EP: GetFamiles
+			Results
+				List of Families
+	
+	Family Page
+		Split View
+			Family Info
+				List
+					Address Field (Int'l Support)
+					Attributes
+						Use a common Data Input class with optional required
+			Individuals
+				List
+					Family Members in Top Field
+						Button for each person
+					Associated Families per row after that
+						Button for each person
+	Add Person Page
+			Split View
+				Left
+					Adult / Child
+					Picture Button
+						Capture Image (no loading from device)
+						
+				Right
+					List
+						Top Row - Person Info
+						Second Row+ - Required Attribs
+						Following Row - Address
+						Following Row+ - Optional Attribs
+			EP: Add Person & Family
+			EP: Add picture
+			EP: Add phone
+	
+	Add Guest Modal
+		Nav Controller
+			Family Results
+				Search Filter
+				List
+					Families
+			Individual Results
+				EP: Get People in Family
+				Search Filter
+				List
+					People
+		
+
+Attributes System
+	Required or Optional
+	Data specifies a UI Type ID that Rock knows as a particular UI control.
+		Ideally, match that. Create a UI Getter system that returns the type of View desired.
+				From Rock - Get the list 
+
+UI Creation System
+	Pass in a Rock UI ID, returns the appropriate UI control.
+	UI Controls should all support Required or Not

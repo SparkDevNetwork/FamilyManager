@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamilyManager", "FamilyManager.csproj", "{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Rock.Mobile", "..\Rock.Mobile\Rock.Mobile.shproj", "{A72997A9-2CAA-402A-AA22-632CB99DC3DD}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Rock.Client.Models", "..\Rock\Rock.Client\Rock.Client.Models.shproj", "{633206D3-C28A-481F-8CF3-2C9A9877FAC3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|iPhoneSimulator = Debug|iPhoneSimulator
+		Release|iPhoneSimulator = Release|iPhoneSimulator
+		Debug|iPhone = Debug|iPhone
+		Release|iPhone = Release|iPhone
+		Ad-Hoc|iPhone = Ad-Hoc|iPhone
+		AppStore|iPhone = AppStore|iPhone
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Ad-Hoc|iPhone.ActiveCfg = Ad-Hoc|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Ad-Hoc|iPhone.Build.0 = Ad-Hoc|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.AppStore|iPhone.ActiveCfg = AppStore|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.AppStore|iPhone.Build.0 = AppStore|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Debug|iPhone.ActiveCfg = Debug|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Debug|iPhone.Build.0 = Debug|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Release|iPhone.ActiveCfg = Release|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Release|iPhone.Build.0 = Release|iPhone
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
+		{AC4E0CD3-9BCC-407C-A5B9-CF5036996BFF}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
+	EndGlobalSection
+EndGlobal
