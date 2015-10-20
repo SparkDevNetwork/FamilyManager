@@ -128,11 +128,11 @@ namespace FamilyManager
                         if ( Parent.Families[ indexPath.Row ].FamilyMembers.Count > 0 )
                         {
                             // first do adults
-                            adultMembersText = "Adults: ";
+                            adultMembersText = Strings.General_Adults + ": ";
                             adultMembersText += cell.FamilyView.GetMembersOfTypeString( Parent.Families[ indexPath.Row ].FamilyMembers, Config.Instance.FamilyMemberAdultGroupRole.Id );
 
                             // now add kids
-                            childMembersText = "Children: ";
+                            childMembersText = Strings.General_Children + ": ";
                             childMembersText += cell.FamilyView.GetMembersOfTypeString( Parent.Families[ indexPath.Row ].FamilyMembers, Config.Instance.FamilyMemberChildGroupRole.Id );
                         }
 
@@ -145,9 +145,9 @@ namespace FamilyManager
                             address1Text = Parent.Families[ indexPath.Row ].HomeLocation.Street1;
 
                             // make sure the remainder exists
-                            if ( string.IsNullOrEmpty( Parent.Families[ indexPath.Row ].HomeLocation.City ) == false &&
-                                 string.IsNullOrEmpty( Parent.Families[ indexPath.Row ].HomeLocation.State ) == false &&
-                                 string.IsNullOrEmpty( Parent.Families[ indexPath.Row ].HomeLocation.PostalCode ) == false )
+                            if ( string.IsNullOrWhiteSpace( Parent.Families[ indexPath.Row ].HomeLocation.City ) == false &&
+                                 string.IsNullOrWhiteSpace( Parent.Families[ indexPath.Row ].HomeLocation.State ) == false &&
+                                 string.IsNullOrWhiteSpace( Parent.Families[ indexPath.Row ].HomeLocation.PostalCode ) == false )
                             {
                                 address2Text = Parent.Families[ indexPath.Row ].HomeLocation.City + ", " +
                                                Parent.Families[ indexPath.Row ].HomeLocation.State + " " +
@@ -206,7 +206,7 @@ namespace FamilyManager
 
         Dynamic_UITextField SearchField { get; set; }
         UIButton SearchButton { get; set; }
-        UIButton RefreshButton { get; set; }
+        UIButton ClearButton { get; set; }
 
         UIButton AddFamilyButton { get; set; }
 
@@ -251,7 +251,7 @@ namespace FamilyManager
                     PerformSearch( );
                     return true;
                 };
-
+            
             DidSearchFail = false;
 
             // setup the search button
@@ -269,11 +269,20 @@ namespace FamilyManager
 
 
             // setup the refresh button
-            /*RefreshButton = UIButton.FromType( UIButtonType.System );
-            RefreshButton.Layer.AnchorPoint = CGPoint.Empty;
-            RefreshButton.SetTitle( "", UIControlState.Normal );
-            Theme.StyleButton( RefreshButton, Config.Instance.VisualSettings.StandardButtonStyle, Settings.General_IconFont );
-            View.AddSubview( RefreshButton );*/
+            ClearButton = UIButton.FromType( UIButtonType.System );
+            ClearButton.Layer.AnchorPoint = CGPoint.Empty;
+            ClearButton.SetTitle( Strings.General_Clear, UIControlState.Normal );
+            Theme.StyleButton( ClearButton, Config.Instance.VisualSettings.DefaultButtonStyle );
+            View.AddSubview( ClearButton );
+            ClearButton.TouchUpInside += (object sender, EventArgs e ) =>
+                {
+                    Families = new List<Rock.Client.Family>( );
+                    DidSearchFail = false;
+
+                    // reload data
+                    ((TableSource)TableView.Source).FamiliesUpdated( TableView );
+                    TableView.ReloadData( );
+                };
 
 
             // setup the add family button
@@ -348,18 +357,20 @@ namespace FamilyManager
             SearchField.Layer.Position = new CGPoint( 10, 25 );
             SearchField.ViewDidLayoutSubviews( new CGRect( 0, 0, View.Bounds.Width * 0.3375f, View.Bounds.Height ) );
 
+            // position the clear button
+            ClearButton.SizeToFit( );
+            ClearButton.Bounds = new CGRect( 0, 0, ClearButton.Bounds.Width * 2, SearchButton.Bounds.Height );
+            ClearButton.Layer.Position = new CGPoint( SearchField.Frame.Right - ClearButton.Bounds.Width, SearchField.Frame.Bottom + 10 );
+
             // now set the search button, which will use remaining width
             SearchButton.Layer.Position = new CGPoint( 10, SearchField.Frame.Bottom + 10 );
             SearchButton.Bounds = new CGRect( 0, 0, SearchField.Bounds.Width, 0 );
             SearchButton.SizeToFit( );
-            SearchButton.Frame = new CGRect( 10, SearchField.Frame.Bottom + 10, SearchField.Bounds.Width, SearchButton.Frame.Height );
-
-            // position the refresh button
-            //RefreshButton.Layer.Position = new CGPoint( SearchField.Frame.Right - RefreshButton.Frame.Width, SearchButton.Frame.Top + ((SearchButton.Frame.Height - RefreshButton.Frame.Height) / 2) );
+            SearchButton.Frame = new CGRect( 10, SearchField.Frame.Bottom + 10, SearchField.Bounds.Width - ClearButton.Bounds.Width - 2, SearchButton.Bounds.Height );
 
 
             // position the 'add family' button
-            AddFamilyButton.Bounds = SearchButton.Bounds;
+            AddFamilyButton.Bounds = new CGRect( 0, 0, SearchField.Bounds.Width, SearchButton.Bounds.Height );
             AddFamilyButton.Layer.Position = new CGPoint( SearchButton.Frame.Left, SearchButton.Frame.Bottom + 10 );
 
 

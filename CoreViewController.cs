@@ -102,7 +102,7 @@ namespace FamilyManager
                 ViewDidAppearCalled = true;
 
                 // when deciding which ViewController to start with, check to see if we have a RockURL
-                if ( string.IsNullOrEmpty( Config.Instance.RockURL ) == true )
+                if ( string.IsNullOrWhiteSpace( Config.Instance.RockURL ) == true )
                 {
                     // we need to know where Rock is, so prompt them for this.
                     PresentViewController( FirstRunViewController, false, null );
@@ -241,7 +241,7 @@ namespace FamilyManager
                             success = true;
 
                             // if the image path is valid, they didn't cancel
-                            if ( string.IsNullOrEmpty( args.ImagePath ) == false )
+                            if ( string.IsNullOrWhiteSpace( args.ImagePath ) == false )
                             {
                                 // load the image for cropping
                                 ImageCropperPendingImage = UIImage.FromFile( args.ImagePath );

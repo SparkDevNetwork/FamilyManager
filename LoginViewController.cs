@@ -177,7 +177,7 @@ namespace FamilyManager
 
             float width = 100;
             float height = 100;
-            BusyIndicator.Frame = new RectangleF( ((float)View.Bounds.Width - width) / 2, (float)LoginResult.Frame.Bottom + 20, width, height );
+            BusyIndicator.Frame = new RectangleF( ((float)View.Bounds.Width - width) / 2, (float)LoginButton.Frame.Bottom + 100, width, height );
         }
 
         public override void ViewWillAppear(bool animated)
@@ -252,12 +252,12 @@ namespace FamilyManager
         {
             bool inputValid = true;
 
-            if ( string.IsNullOrEmpty( UserNameField.Text ) == true )
+            if ( string.IsNullOrWhiteSpace( UserNameField.Text ) == true )
             {
                 inputValid = false;
             }
 
-            if ( string.IsNullOrEmpty( PasswordField.Text ) == true )
+            if ( string.IsNullOrWhiteSpace( PasswordField.Text ) == true )
             {
                 inputValid = false;
             }

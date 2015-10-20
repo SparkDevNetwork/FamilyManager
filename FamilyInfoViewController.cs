@@ -17,6 +17,8 @@ using Rock.Mobile.PlatformSpecific.Util;
 using Rock.Mobile.Network;
 using System.Net;
 using System.Linq;
+using Rock.Mobile.Animation;
+
 
 namespace FamilyManager
 {
@@ -966,8 +968,8 @@ namespace FamilyManager
 
         public Rock.Client.Family Family { get; protected set; }
 
-        Rock.Client.Group FamilyGroupObject { get; set; }
-        Rock.Client.GroupLocation FamilyAddress { get; set; }
+        Rock.Client.Group FamilyGroupObject;
+        Rock.Client.GroupLocation FamilyAddress;
 
         List<Rock.Client.GuestFamily> GuestFamilies { get; set; }
 
@@ -996,10 +998,112 @@ namespace FamilyManager
 
         UIBlockerView BlockerView { get; set; }
 
-        const string FamilySuffix = " Family";
+
+
+        class SaveResultView : UIView
+        {
+            UILabel ResultSymbol { get; set; }
+            UILabel ResultText { get; set; }
+
+            bool IsDisplaying { get; set; }
+
+            public SaveResultView( )
+            {
+                Layer.AnchorPoint = CGPoint.Empty;
+                BackgroundColor = Theme.GetColor(  Config.Instance.VisualSettings.TopHeaderBGColor );
+                Layer.Opacity = 0.00f;
+                Layer.CornerRadius = 4;
+
+                ResultSymbol = new UILabel( );
+                ResultSymbol.Layer.AnchorPoint = CGPoint.Empty;
+                ResultSymbol.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( "Bh", 96 );
+                //ResultSymbol.BackgroundColor = UIColor.Blue;
+                ResultSymbol.TextColor = UIColor.White;
+                AddSubview( ResultSymbol );
+
+                ResultText = new UILabel( );
+                ResultText.Layer.AnchorPoint = CGPoint.Empty;
+                //ResultText.BackgroundColor = UIColor.Green;
+                ResultText.TextColor = UIColor.White;
+                ResultText.Font = ResultText.Font.WithSize( 24 );
+                AddSubview( ResultText );
+
+                IsDisplaying = false;
+            }
+
+            public void Display( string symbolText, string resultText, UIView parentView )
+            {
+                // don't allow multiple display calls. Causes the animations to get weird.
+                if ( IsDisplaying == false )
+                {
+                    IsDisplaying = true;
+
+                    // set the text values and update positioning
+                    ResultSymbol.Text = symbolText;
+
+                    ResultText.Text = resultText;
+
+                    ResultSymbol.SizeToFit( );
+                    ResultText.SizeToFit( );
+
+                    Bounds = new CGRect( 0, 0, ResultText.Bounds.Width + 40, ResultText.Bounds.Height + ResultSymbol.Bounds.Height + 80 );
+
+                    nfloat vertSpacing = 20;
+                    nfloat elementTotalHeight = ResultSymbol.Bounds.Height + ResultText.Bounds.Height + vertSpacing;
+
+                    ResultSymbol.Layer.Position = new CGPoint( ( Bounds.Width - ResultSymbol.Bounds.Width ) / 2, ( Bounds.Height - elementTotalHeight ) / 2 );
+                    ResultText.Layer.Position = new CGPoint( ( Bounds.Width - ResultText.Bounds.Width ) / 2, ResultSymbol.Frame.Bottom + vertSpacing );
+
+                    // position the view
+                    Layer.Position = new CGPoint( ( parentView.Bounds.Width - Bounds.Width ) / 2, 
+                                                  ( parentView.Bounds.Height / 2 ) - Bounds.Height );
+
+                    // kick off the animations
+                    float viewOpacity = .80f;
+                    float animTime = .45f;
+
+                    SimpleAnimator_Float fadeInAnim = new SimpleAnimator_Float( 0.00f, viewOpacity, animTime, 
+                        delegate( float perc, object value )
+                        {
+                            Layer.Opacity = (float)value;
+                        }, 
+                        delegate
+                        {
+                            // when finished, wait, then fade it out
+                            System.Timers.Timer timer = new System.Timers.Timer();
+                            timer.Interval = 2000;
+                            timer.AutoReset = false;
+                            timer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e ) =>
+                            {
+                                // do this ON the UI thread
+                                Rock.Mobile.Threading.Util.PerformOnUIThread( delegate
+                                    {
+                                        SimpleAnimator_Float fadeOutAnim = new SimpleAnimator_Float( viewOpacity, 0.00f, animTime, 
+                                            delegate( float perc, object value )
+                                            {
+                                                Layer.Opacity = (float)value;
+                                            },
+                                            delegate
+                                            { 
+                                                IsDisplaying = false; 
+                                            });
+
+                                        fadeOutAnim.Start( SimpleAnimator.Style.CurveEaseOut );
+                                    } );
+                            };
+                            timer.Start( );
+
+                        } );
+                    fadeInAnim.Start( SimpleAnimator.Style.CurveEaseIn );
+                }
+            }
+        }
+        SaveResultView SaveResult { get; set; }
 
         public FamilyInfoViewController( ContainerViewController parent, Rock.Client.Family family )
         {
+            SaveResult = new SaveResultView();
+
             Parent = parent;
 
             FamilyGroupObject = null;
@@ -1148,10 +1252,6 @@ namespace FamilyManager
             if ( Family.Id == 0 )
             {
                 TableView.Source = new TableSource( this );
-                //FamilyName.SetCurrentValue( Strings.FamilyInfo_Unnamed_Family );
-
-                // we can also safely set the state to its default value.
-                State.Text = Config.Instance.DefaultState;
             }
 
             // create the new person and add person view controllers
@@ -1164,6 +1264,8 @@ namespace FamilyManager
             View.AddSubview( AddPersonViewController.View );
 
             BlockerView = new UIBlockerView( View, View.Bounds.ToRectF( ) );
+
+            View.AddSubview( SaveResult );
         }
 
         bool IsRefreshingFamily { get; set; }
@@ -1232,7 +1334,7 @@ namespace FamilyManager
                     Family = new Rock.Client.Family();
 
                     TableView.Source = new TableSource( this );
-                    FamilyName.SetCurrentValue( Strings.FamilyInfo_Unnamed_Family );
+                    FamilyName.SetCurrentValue( string.Empty );
                     TableView.ReloadData( );
                 } );
         }
@@ -1310,7 +1412,7 @@ namespace FamilyManager
         {
             FamilyManagerApi.SortFamilyMembers( Family.FamilyMembers );
 
-            // populate the address and dynamic fields
+            // set the family name. (Don't append "Family", because it should always be set when working from data)
             FamilyName.SetCurrentValue( Family.Name );
 
             // address (or blank if thye don't have one)
@@ -1534,18 +1636,14 @@ namespace FamilyManager
             // if a family name was provided, 
             if ( familyLastName != null )
             {
-                // strip off any " Family" that might be on the family's last name
-                if ( familyLastName.EndsWith( FamilySuffix ) )
-                {
-                    familyLastName = familyLastName.Substring( 0, familyLastName.Length - FamilySuffix.Length );
-                }
+                familyLastName = UI.FamilySuffixManager.FamilyNameNoSuffix( familyLastName );
             }
             else
             {
                 // otherwise, no family name, so use the FamilyName field.
                 // note we cannot JUST do this, because if they're adding someone to a GUEST family,
                 // we don't want to use the FamilyName field.
-                familyLastName = FamilyName.GetCurrentValue( );
+                familyLastName = UI.FamilySuffixManager.FamilyNameNoSuffix( FamilyName.GetCurrentValue( ) );
             }
 
             PersonInfoViewController.PresentAnimated( workingFamilyId, familyLastName, null, false, null, null, OnNewPersonComplete );
@@ -1589,7 +1687,7 @@ namespace FamilyManager
                                                             if( Rock.Mobile.Network.Util.StatusInSuccessRange( updateRoleCode ) )
                                                             {
                                                                 // copy over all the filled in info so we can update this newly created family.
-                                                                UIToFamilyInfo( );
+                                                                UIToFamilyInfo( ref FamilyGroupObject, ref FamilyAddress, ref PendingAttribChanges );
 
                                                                 // and immediately submit it. This will ensure we sync all the info they've typed 
                                                                 // up to Rock!
@@ -1758,29 +1856,59 @@ namespace FamilyManager
         {
             // first create a new family
             Rock.Client.Group familyGroup = new Rock.Client.Group();
-            familyGroup.CampusId = 1;
-            familyGroup.Name = FamilyName.GetCurrentValue( ).ToUpperWords( );
+            Rock.Client.GroupLocation familyAddress = new Rock.Client.GroupLocation();
+            List<KeyValuePair<string, string>> pendingAttribChanges = new List<KeyValuePair<string, string>>( );
 
-            FamilyManagerApi.CreateNewFamily( familyGroup, delegate(System.Net.HttpStatusCode statusCode, string statusDescription )
+            UIToFamilyInfo( ref familyGroup, ref familyAddress, ref pendingAttribChanges );
+
+            // if the family name field wasn't set, the family will still have no name, so we'll use the
+            // person to add's last name.
+            if ( UI.FamilySuffixManager.FamilyNameBlankOrSuffix( familyGroup.Name ) == true )
+            {
+                familyGroup.Name = FamilySuffixManager.FamilyNameWithSuffix( familyMembers[ 0 ].Person.LastName );
+            }
+
+            FamilyManagerApi.CreateNewFamily( familyGroup, 
+                delegate(System.Net.HttpStatusCode statusCode, string statusDescription )
                 {
                     if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) )
                     {
                         // now get that group
                         ApplicationApi.GetFamilyGroupModelByGuid( familyGroup.Guid, 
-                            delegate(HttpStatusCode familyCode, string familyDescription, Rock.Client.Group model )
+                            delegate(HttpStatusCode getFamilyCode, string getFamilyDesc, Rock.Client.Group model )
                             {
-                                if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) )
+                                // now take the model returned and copy that into our familyGroup, because
+                                // it should be everything that was plus new data like the ID.
+                                familyGroup = model;
+                                
+                                if ( Rock.Mobile.Network.Util.StatusInSuccessRange( getFamilyCode ) )
                                 {
-                                    // take this as our family group object
-                                    FamilyGroupObject = model;
-                                    UIToFamilyInfo( );
+                                    FamilyManagerApi.UpdateFullFamily( familyGroup, familyAddress, pendingAttribChanges, 
+                                        delegate(System.Net.HttpStatusCode updateFamilyCode, string updateFamilyDesc )
+                                        {
+                                            if ( Rock.Mobile.Network.Util.StatusInSuccessRange( updateFamilyCode ) )
+                                            {
+                                                // take the model from the GetFamily as our family. Our address can be
+                                                // the address we got from the UI.
+                                                FamilyGroupObject = model;
+                                                FamilyAddress = familyAddress;
 
-                                    // setup a family object that can be refreshed.
-                                    Family = new Rock.Client.Family();
-                                    Family.Id = FamilyGroupObject.Id;
+                                                // setup a family object that can be refreshed.
+                                                Family = new Rock.Client.Family();
+                                                Family.Id = FamilyGroupObject.Id;
 
-                                    // now use the standard addPeopleToFamily
-                                    AddPeopleToFamily( familyMembers, Family.Id, removeFromOtherFamilies );
+                                                // now use the standard addPeopleToFamily
+                                                AddPeopleToFamily( familyMembers, Family.Id, removeFromOtherFamilies );
+                                            }
+                                            // Error retrieving the newly created family
+                                            else
+                                            {
+                                                BlockerView.Hide( delegate
+                                                    {
+                                                        Rock.Mobile.Util.Debug.DisplayError( Strings.General_Error_Header, Strings.General_Error_Message );
+                                                    } );
+                                            }
+                                        });
                                 }
                                 // Error retrieving the newly created family
                                 else
@@ -1822,33 +1950,31 @@ namespace FamilyManager
             }
         }
 
-
         List<KeyValuePair<string, string>> PendingAttribChanges = null;
-        void UIToFamilyInfo( )
+        void UIToFamilyInfo( ref Rock.Client.Group familyGroup, ref Rock.Client.GroupLocation familyAddress, ref List<KeyValuePair<string, string>> pendingAttribChanges )
         {
-            // grab the family name (and ensure it ends with " Family"
-            FamilyGroupObject.Name = FamilyName.GetCurrentValue( ).ToUpperWords( );
-            if ( FamilyGroupObject.Name.EndsWith( FamilySuffix ) == false )
+            // if there IS a familyname, grab it. (and ensure it ends with " Family")
+            if ( string.IsNullOrWhiteSpace( FamilyName.GetCurrentValue( ) ) == false )
             {
-                FamilyGroupObject.Name += FamilySuffix;
+                familyGroup.Name = UI.FamilySuffixManager.FamilyNameWithSuffix( FamilyName.GetCurrentValue( ).ToUpperWords( ) );
             }
 
-            FamilyAddress = null;
-            if ( string.IsNullOrEmpty( Street.Text ) == false )
+            familyAddress = null;
+            if ( string.IsNullOrWhiteSpace( Street.Text ) == false )
             {
-                FamilyAddress = RockActions.CreateHomeAddress( Street.Text.ToUpperWords( ), City.Text.ToUpperWords( ), State.Text.ToUpper( ), PostalCode.Text );
+                familyAddress = RockActions.CreateHomeAddress( Street.Text.ToUpperWords( ), City.Text.ToUpperWords( ), State.Text.ToUpper( ), PostalCode.Text );
             }
 
             // set the family's campus ID (if a value is selected)
             Rock.Client.Campus campus = Config.Instance.Campuses.Where( c => c.Name == FamilyCampus.GetCurrentValue( ) ).SingleOrDefault( );
             if ( campus != null )
             {
-                FamilyGroupObject.CampusId = campus.Id;
+                familyGroup.CampusId = campus.Id;
             }
 
             // get the dynamic info
-            PendingAttribChanges = new List<KeyValuePair<string, string>>();
-            FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_FamilyControls, PendingAttribChanges );
+            pendingAttribChanges = new List<KeyValuePair<string, string>>();
+            FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_FamilyControls, pendingAttribChanges );
         }
 
         void TrySubmitFamilyInfo( )
@@ -1868,7 +1994,7 @@ namespace FamilyManager
                         delegate
                         {
                             // take the new data
-                            UIToFamilyInfo( );
+                            UIToFamilyInfo( ref FamilyGroupObject, ref FamilyAddress, ref PendingAttribChanges );
 
                             // attempt the update
                             FamilyManagerApi.UpdateFullFamily( FamilyGroupObject, FamilyAddress, PendingAttribChanges, delegate(HttpStatusCode statusCode, string statusDescription )
@@ -1880,6 +2006,10 @@ namespace FamilyManager
                                             {
                                                 Rock.Mobile.Util.Debug.DisplayError( Strings.General_Error_Header, Strings.General_Error_Message );
                                             }
+                                            else
+                                            {
+                                                SaveResult.Display( "", Strings.FamilyInfo_SaveComplete, View );
+                                            }
                                         } );
                                 } );
                         } );
@@ -1889,20 +2019,22 @@ namespace FamilyManager
 
         public bool ValidateInfo( )
         {
-            // require a family name
-            if ( string.IsNullOrEmpty( FamilyName.GetCurrentValue( ) ) )
+            // if the family name is invalid, fail.
+            if( UI.FamilySuffixManager.FamilyNameBlankOrSuffix( FamilyName.GetCurrentValue( ) ) == true )
             {
+                Rock.Mobile.Util.Debug.DisplayError( Strings.FamilyInfo_MissingName_Header, Strings.FamilyInfo_MissingName_Message );
                 return false;
             }
 
             // if street is valid, we're fine to submit, regardless of the other values.
-            if ( string.IsNullOrEmpty( Street.Text ) == true )
+            if ( string.IsNullOrWhiteSpace( Street.Text ) == true )
             {
                 // since street is blank, we need to ensure all others are too
-                if ( string.IsNullOrEmpty( City.Text ) == false ||
-                     string.IsNullOrEmpty( State.Text ) == false ||
-                     string.IsNullOrEmpty( PostalCode.Text ) == false )
+                if ( string.IsNullOrWhiteSpace( City.Text ) == false ||
+                    string.IsNullOrWhiteSpace( State.Text ) == false ||
+                    string.IsNullOrWhiteSpace( PostalCode.Text ) == false )
                 {
+                    Rock.Mobile.Util.Debug.DisplayError( Strings.FamilyInfo_BadAddress_Header, Strings.FamilyInfo_BadAddress_Message );
                     return false;
                 }
             }
@@ -1910,8 +2042,9 @@ namespace FamilyManager
             foreach ( IDynamic_UIView dynamicView in Dynamic_FamilyControls )
             {
                 // if any of the required dynamic views are empty, return false
-                if ( dynamicView.IsRequired( ) && string.IsNullOrEmpty( dynamicView.GetCurrentValue( ) ) )
+                if ( dynamicView.IsRequired( ) && string.IsNullOrWhiteSpace( dynamicView.GetCurrentValue( ) ) )
                 {
+                    Rock.Mobile.Util.Debug.DisplayError( Strings.FamilyInfo_BlankAttrib_Header, Strings.FamilyInfo_BlankAttrib_Message );
                     return false;
                 }
             }

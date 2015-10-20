@@ -164,7 +164,7 @@ namespace FamilyManager
 
                 // take the birthday IF there's a value set.
                 string birthday = BirthdatePicker.GetCurrentValue( );
-                if ( string.IsNullOrEmpty( birthday ) == false )
+                if ( string.IsNullOrWhiteSpace( birthday ) == false )
                 {
                     RockActions.SetBirthday( workingPerson, DateTime.Parse( birthday ) );
                 }
@@ -197,13 +197,15 @@ namespace FamilyManager
             public virtual bool IsInfoDirty( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber )
             {
                 // if anything in the UI is different from the objects, then yeah, it's dirty
-                if ( workingPerson.NickName != FirstName.GetCurrentValue( ) )
+                string workingNickName = workingPerson.NickName == null ? "" : workingPerson.NickName;
+                if ( workingNickName != FirstName.GetCurrentValue( ) )
                 {
                     return true;
                 }
 
                 // check last name
-                if ( workingPerson.LastName != LastName.GetCurrentValue( ) )
+                string workingLastName = workingPerson.LastName == null ? "" : workingPerson.LastName;
+                if ( workingLastName != LastName.GetCurrentValue( ) )
                 {
                     return true;
                 }
@@ -228,7 +230,7 @@ namespace FamilyManager
                 }
 
                 // check their phone number. first, if either is NOT null, we need to inspect further
-                if ( string.IsNullOrEmpty( workingPhoneNumber.Number ) == false || string.IsNullOrEmpty( PhoneNumber.GetCurrentValue( ) ) == false )
+                if ( string.IsNullOrWhiteSpace( workingPhoneNumber.Number ) == false || string.IsNullOrWhiteSpace( PhoneNumber.GetCurrentValue( ) ) == false )
                 {
                     // if they don't match, it's dirty. We can't ONLY do this, because if they dont' match due to one being null and the other being "", that isn't dirty.
                     if ( workingPhoneNumber.Number != PhoneNumber.GetCurrentValue( ).AsNumeric( ) )
@@ -262,27 +264,59 @@ namespace FamilyManager
                 return false;
             }
 
+            protected bool AttributesDirty( Dictionary<string, Rock.Client.AttributeValue> workingAttributeValues )
+            {
+                // helper method that will take a list of attributes and compare them with what's in the UI panel.
+                
+                // check the attributes
+                List<KeyValuePair<string, string>> currentAttributeValues = new List<KeyValuePair<string, string>>( );
+                FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_RequiredControls, currentAttributeValues );
+                FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_OptionalControls, currentAttributeValues );
+
+                // make sure that for each key, the value matches
+                foreach ( KeyValuePair<string, string> attrib in currentAttributeValues )
+                {
+                    // find the matching key in their original attribute list, and compare.
+                    KeyValuePair<string, Rock.Client.AttributeValue> workingAttrib = workingAttributeValues.Where( wa => wa.Key == attrib.Key ).SingleOrDefault( );
+                    if ( workingAttrib.Key != null )
+                    {
+                        // before testing, make sure we take an empty string instead of null for the working attribute.
+                        string workingAttribValue = workingAttrib.Value.Value == null ? string.Empty : workingAttrib.Value.Value;
+                        if ( attrib.Value != workingAttribValue )
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
             public virtual bool ValidateInfo( )
             {
                 // ensure all required fields are filled out
-                if ( string.IsNullOrEmpty( FirstName.GetCurrentValue( ) ) )
+                if ( string.IsNullOrWhiteSpace( FirstName.GetCurrentValue( ) ) )
                 {
+                    Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_BlankFirstName_Header, Strings.PersonInfo_BlankFirstName_Message );
                     return false;
                 }
 
-                if ( string.IsNullOrEmpty( LastName.GetCurrentValue( ) ) )
+                if ( string.IsNullOrWhiteSpace( LastName.GetCurrentValue( ) ) )
                 {
+                    Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_BlankLastName_Header, Strings.PersonInfo_BlankLastName_Message );
                     return false;
                 }
 
-                if( string.IsNullOrEmpty( GenderToggle.GetCurrentValue( ) ) )
+                if( string.IsNullOrWhiteSpace( GenderToggle.GetCurrentValue( ) ) )
                 {
+                    Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_BlankGender_Header, Strings.PersonInfo_BlankGender_Message );
                     return false;
                 }
 
                 // Make sure if there IS an email address, it's a valid format.
                 if ( EmailAddress.GetCurrentValue( ) != string.Empty && EmailAddress.GetCurrentValue( ).IsEmailFormat( ) == false )
                 {
+                    Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_BadEmail_Header, Strings.PersonInfo_BadEmail_Message );
                     return false;
                 }
 
@@ -341,6 +375,8 @@ namespace FamilyManager
         {
             //UIToggle MaritalStatusToggle { get; set; }
             protected Dynamic_UIToggle MaritalStatusToggle { get; set; }
+            protected Dictionary<string, Rock.Client.AttributeValue> WorkingAttributeValues;
+
 
             public override void Copy( BaseMemberPanel rhs )
             {
@@ -382,6 +418,9 @@ namespace FamilyManager
                     dynamicView.SetCurrentValue( string.Empty );
                 }
 
+                // store the original attribute values so we can flag if they're dirty
+                WorkingAttributeValues = attributeValues;
+
                 FamilyManager.UI.Dynamic_UIFactory.AttributesToUI( attributeValues, Dynamic_RequiredControls );
                 FamilyManager.UI.Dynamic_UIFactory.AttributesToUI( attributeValues, Dynamic_OptionalControls );
             }
@@ -408,6 +447,28 @@ namespace FamilyManager
                 FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_OptionalControls, PendingAttribUpdates );
             }
 
+            public override bool IsInfoDirty( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber )
+            {
+                // check our attribute values.
+                if ( AttributesDirty( WorkingAttributeValues ) == true )
+                {
+                    return true;
+                }
+
+                // check marital status
+                string maritalStatusStr = MaritalStatusToggle.GetCurrentValue( );
+                Rock.Client.DefinedValue maritalStatus = Config.Instance.MaritalStatus.Where( ms => ms.Value == maritalStatusStr ).SingleOrDefault( );
+                if ( maritalStatus != null )
+                {
+                    if ( workingPerson.MaritalStatusValueId != maritalStatus.Id )
+                    {
+                        return true;
+                    }
+                }
+
+                return base.IsInfoDirty( workingPerson, workingPhoneNumber );
+            }
+
             public override bool ValidateInfo( )
             {
                 // return false if our base control has a blank required field
@@ -416,12 +477,12 @@ namespace FamilyManager
                     return false;
                 }
 
-
                 // check the required attribs. If any of htem are blank, return false.
                 foreach ( IDynamic_UIView dynamicControl in Dynamic_RequiredControls )
                 {
-                    if ( string.IsNullOrEmpty( dynamicControl.GetCurrentValue( ) ) == true )
+                    if ( string.IsNullOrWhiteSpace( dynamicControl.GetCurrentValue( ) ) == true )
                     {
+                        Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_BlankAttrib_Header, Strings.PersonInfo_BlankAttrib_Message );
                         return false;
                     }
                 }
@@ -523,6 +584,7 @@ namespace FamilyManager
         class ChildMemberPanel : BaseMemberPanel
         {
             Dynamic_UIDropDown GradeDropDown { get; set; }
+            protected Dictionary<string, Rock.Client.AttributeValue> WorkingAttributeValues;
 
             public override void Copy( BaseMemberPanel rhs )
             {
@@ -560,6 +622,8 @@ namespace FamilyManager
                     dynamicView.SetCurrentValue( string.Empty );
                 }
 
+                // store the current attribute values so we can warn if they are changed
+                WorkingAttributeValues = attributeValues;
                 FamilyManager.UI.Dynamic_UIFactory.AttributesToUI( attributeValues, Dynamic_RequiredControls );
                 FamilyManager.UI.Dynamic_UIFactory.AttributesToUI( attributeValues, Dynamic_OptionalControls );
             }
@@ -570,7 +634,7 @@ namespace FamilyManager
 
                 // update their grade
                 string gradeValueStr = GradeDropDown.GetCurrentValue( );
-                if ( string.IsNullOrEmpty( gradeValueStr ) == false )
+                if ( string.IsNullOrWhiteSpace( gradeValueStr ) == false )
                 {
                     // find the defined value with the matching description
                     Rock.Client.DefinedValue gradeValue = Config.Instance.SchoolGrades.Where( sg => sg.Description == gradeValueStr ).SingleOrDefault( );
@@ -581,6 +645,30 @@ namespace FamilyManager
                 // GET attribute values
                 FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_RequiredControls, PendingAttribUpdates );
                 FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_OptionalControls, PendingAttribUpdates );
+            }
+
+            public override bool IsInfoDirty( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber )
+            {
+                // check our attribute values.
+                if ( AttributesDirty( WorkingAttributeValues ) == true )
+                {
+                    return true;
+                }
+
+                // check their grade
+                string gradeValueStr = GradeDropDown.GetCurrentValue( );
+                if ( string.IsNullOrWhiteSpace( gradeValueStr ) == false )
+                {
+                    // find the defined value with the matching description
+                    Rock.Client.DefinedValue gradeValue = Config.Instance.SchoolGrades.Where( sg => sg.Description == gradeValueStr ).SingleOrDefault( );
+
+                    if ( int.Parse( gradeValue.Value ) != workingPerson.GradeOffset )
+                    {
+                        return true;
+                    }
+                }
+
+                return base.IsInfoDirty( workingPerson, workingPhoneNumber );
             }
 
             public override void ViewDidLoad( UIViewController parentViewController )
@@ -640,8 +728,9 @@ namespace FamilyManager
                 // check the required attribs. If any of htem are blank, return false.
                 foreach ( IDynamic_UIView dynamicControl in Dynamic_RequiredControls )
                 {
-                    if ( string.IsNullOrEmpty( dynamicControl.GetCurrentValue( ) ) == true )
+                    if ( string.IsNullOrWhiteSpace( dynamicControl.GetCurrentValue( ) ) == true )
                     {
+                        Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_BlankAttrib_Header, Strings.PersonInfo_BlankAttrib_Message );
                         return false;
                     }
                 }
@@ -860,6 +949,10 @@ namespace FamilyManager
                 if ( ActivePanel.IsInfoDirty( WorkingPerson, WorkingPhoneNumber ) )
                 {
                     ConfirmCancel( );
+                }
+                else
+                {
+                    DismissAnimated( false );
                 }
             };
 
@@ -1093,10 +1186,6 @@ namespace FamilyManager
                                     } );
                             } );
                     } );
-            }
-            else
-            {
-                Rock.Mobile.Util.Debug.DisplayError( Strings.PersonInfo_MissingInfo_Header, Strings.PersonInfo_MissingInfo_Message );
             }
         }
 

@@ -31,6 +31,7 @@ namespace FamilyManager
         public static string General_Logout = "Logout";
         public static string General_Stay = "Stay";
         public static string General_Remove = "Remove";
+        public static string General_Clear = "Clear";
 
         public static string Search_NoResults_Title = "No Families Found";
         public static string Search_NoResults_Suggestions = "Suggestions:";
@@ -55,6 +56,8 @@ namespace FamilyManager
         public const string General_Female = "Female";
         public static string General_Adult = "Adult";
         public static string General_Child = "Child";
+        public static string General_Adults = "Adults";
+        public static string General_Children = "Children";
 
         public static string General_Error_Header = "Network Error";
         public static string General_Error_Message = "There was a problem talking to Rock. Try again";
@@ -80,6 +83,23 @@ namespace FamilyManager
         public static string PersonInfo_ConfirmCancelNewPerson = "Cancel adding this person?";
         public static string PersonInfo_ConfirmCancelExistingPerson = "Cancel making changes to this person?";
 
+
+        public static string PersonInfo_BlankFirstName_Header = "First Name";
+        public static string PersonInfo_BlankFirstName_Message = "The First Name field is blank. Add a first name and try again.";
+
+        public static string PersonInfo_BlankLastName_Header = "Last Name";
+        public static string PersonInfo_BlankLastName_Message = "The Last Name field is blank. Add a last name and try again.";
+
+        public static string PersonInfo_BlankGender_Header = "Gender";
+        public static string PersonInfo_BlankGender_Message = "Select a gender and try again.";
+
+        public static string PersonInfo_BadEmail_Header = "Email";
+        public static string PersonInfo_BadEmail_Message = "The email address is not formatted correctly. Make sure it is example@email.com and try again.";
+
+        public static string PersonInfo_BlankAttrib_Header = "Person Attribute";
+        public static string PersonInfo_BlankAttrib_Message = "One of the required person attributes is blank. Add the required information and try again.";
+
+
         public static string PersonInfo_MissingInfo_Header = "Missing Information";
         public static string PersonInfo_MissingInfo_Message = "At least one required field is empty, or there is an invalid email address. Double check and try again.";
 
@@ -93,11 +113,22 @@ namespace FamilyManager
         public static string FamilyInfo_Select_Campus_Message = "Select Home Campus";
         public static string FamilyInfo_Unnamed_Family = "Unnamed Family";
 
+        public static string FamilyInfo_MissingName_Header = "Family Name";
+        public static string FamilyInfo_MissingName_Message = "The Family Name is blank. Add a name and try again.";
+
+        public static string FamilyInfo_BadAddress_Header = "Family Address";
+        public static string FamilyInfo_BadAddress_Message = "The Family Address isn't correct. Make sure it's either blank, or has at least a Street.";
+
+        public static string FamilyInfo_BlankAttrib_Header = "Family Attribute";
+        public static string FamilyInfo_BlankAttrib_Message = "One of the required family attributes is blank. Add the required information and try again.";
+
         public static string FamilyInfo_Header_NoMembers = "Empty Family";
         public static string FamilyInfo_Body_NoMembers = "This family is empty. Please add at least one family member and then try again.";
 
         public static string FamilyInfo_Header_Gone = "Family Gone";
         public static string FamilyInfo_Body_Gone = "It doesn't look like this family exists anymore. Try again or search for another family.";
+
+        public static string FamilyInfo_SaveComplete = "Save Complete";
 
         public static string AddPerson_AddFamilyAsGuest_Header = "Add Family?";
         public static string AddPerson_AddFamilyAsGuest_Message = "Add the {0} (including {1}) as a guest family?";

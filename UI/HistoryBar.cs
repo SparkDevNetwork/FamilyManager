@@ -30,11 +30,11 @@ namespace FamilyManager
 
                 // create the button and add its click handler
                 Button = UIButton.FromType( UIButtonType.System );
-                Button.SetTitle( Family.Name, UIControlState.Normal );
+                Button.SetTitle( UI.FamilySuffixManager.FamilyNameNoSuffix( Family.Name ), UIControlState.Normal );
                 Button.SetTitleColor( Theme.GetColor( Config.Instance.VisualSettings.FooterTextColor ), UIControlState.Normal );
 
                 // now measure the button label
-                NSString createLabel = new NSString( Family.Name );
+                NSString createLabel = new NSString( UI.FamilySuffixManager.FamilyNameNoSuffix( Family.Name ) );
                 CGSize buttonSize = createLabel.StringSize( Button.Font );
                 Button.Bounds = new CGRect( 0, 0, buttonSize.Width, buttonSize.Height );
 
@@ -61,7 +61,7 @@ namespace FamilyManager
             NSString leftLabel = new NSString( "" );
 
             SettingsButton = UIButton.FromType( UIButtonType.System );
-            SettingsButton.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( "Bh", 32 );
+            SettingsButton.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( Settings.General_IconFont, 32 );
             SettingsButton.SetTitle( leftLabel.ToString( ), UIControlState.Normal );
             SettingsButton.SetTitleColor( Theme.GetColor( Config.Instance.VisualSettings.FooterTextColor ), UIControlState.Normal );
             SettingsButton.TouchUpInside += onSettingsPressed;
@@ -123,7 +123,7 @@ namespace FamilyManager
             {
                 // update the family and button title for the entry
                 currItem.Family = family;
-                currItem.Button.SetTitle( family.Name, UIControlState.Normal );
+                currItem.Button.SetTitle( UI.FamilySuffixManager.FamilyNameNoSuffix( family.Name ), UIControlState.Normal );
 
                 return true;
             }

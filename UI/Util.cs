@@ -18,6 +18,90 @@ namespace FamilyManager
 {
     namespace UI
     {
+        public static class FamilySuffixManager
+        {
+            const string FamilySuffix = " Family";
+
+            // returns true if the family name is either blank, or just "Family"
+            public static bool FamilyNameBlankOrSuffix( string familyName )
+            {
+                // if it's null, then we're done.
+                if ( familyName == null )
+                {
+                    return true;
+                }
+                else
+                {
+                    // otherwise see if there's a suffix. If so, remove it.
+                    string strippedFamilyName = familyName;
+                    if ( FamilyNameHasSuffix( strippedFamilyName ) )
+                    {
+                        strippedFamilyName = strippedFamilyName.Substring( 0, strippedFamilyName.Length - FamilySuffix.Length );
+                    }
+
+                    // now see if it's only whitespace. If it is, it was either blank or only a suffix.
+                    if ( string.IsNullOrWhiteSpace( strippedFamilyName ) )
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+
+            public static string FamilyNameWithSuffix( string familyName )
+            {
+                // if they pass null, give them back just the suffix.
+                if ( familyName == null )
+                {
+                    return FamilySuffix;
+                }
+                // otherwise handle normal checks
+                else
+                {
+                    // returns a string guaranteed to have the family suffix
+                    if ( FamilyNameHasSuffix( familyName ) == false )
+                    {
+                        familyName += FamilySuffix;
+                    }
+
+                    return familyName;
+                }
+            }
+
+            // returns true if the family name is only the "Family" suffix.
+            public static bool FamilyNameHasSuffix( string familyName )
+            {
+                // if it's null, no it doesnt.
+                if ( familyName == null )
+                {
+                    return false;
+                }
+                else
+                {
+                    return familyName.EndsWith( FamilySuffix, StringComparison.OrdinalIgnoreCase );
+                }
+            }
+
+            public static string FamilyNameNoSuffix( string familyName )
+            {
+                // if they gave us null, then return an empty family name to them.
+                if ( familyName == null )
+                {
+                    return string.Empty;
+                }
+                else
+                {
+                    if ( FamilyNameHasSuffix( familyName ) )
+                    {
+                        return familyName.Substring( 0, familyName.Length - FamilySuffix.Length );
+                    }
+
+                    return familyName;
+                }
+            }
+        }
+        
         /// <summary>
         /// Definition for a cell that can be used to display family search results
         /// </summary>
@@ -509,7 +593,7 @@ namespace FamilyManager
 
             public void SetCurrentValue( string value )
             {
-                if ( string.IsNullOrEmpty( value ) )
+                if ( string.IsNullOrWhiteSpace( value ) )
                 {
                     ToggleValue.ToggleSide( UIToggle.Toggle.None );
                 }
@@ -684,7 +768,7 @@ namespace FamilyManager
                     DateTime initialDate = DateTime.Now.AddYears( -1 );
 
                     // if there's already a value, use that.
-                    if( string.IsNullOrEmpty( ValueLabel.Text ) == false )
+                    if( string.IsNullOrWhiteSpace( ValueLabel.Text ) == false )
                     {
                         initialDate = DateTime.Parse( ValueLabel.Text );
                     }
@@ -767,7 +851,7 @@ namespace FamilyManager
             public void SetCurrentValue( string value )
             {
                 // force correct formatting
-                if ( string.IsNullOrEmpty( value ) == false )
+                if ( string.IsNullOrWhiteSpace( value ) == false )
                 {
                     DateTime dateTimeValue = DateTime.Parse( value );
                     ValueLabel.Text = string.Format( "{0:MMMMM dd yyyy}", dateTimeValue );
@@ -800,7 +884,7 @@ namespace FamilyManager
             void UpdateSymbol( )
             {
                 // if there's a value in the label...
-                if ( string.IsNullOrEmpty( ValueLabel.Text ) == false )
+                if ( string.IsNullOrWhiteSpace( ValueLabel.Text ) == false )
                 {
                     // position the symbol at the end of the label, centered vertically
                     ValueSymbol.Layer.Position = new CGPoint( ValueLabel.Frame.Right + ( ValueSymbol.Bounds.Width / 2 ) + 5, ValueLabel.Frame.Top + ( ValueLabel.Bounds.Height / 2 ) );   
@@ -814,7 +898,7 @@ namespace FamilyManager
 
             void ToggleClearButton( )
             {
-                if ( string.IsNullOrEmpty( ValueLabel.Text ) == true )
+                if ( string.IsNullOrWhiteSpace( ValueLabel.Text ) == true )
                 {
                     ClearButton.Enabled = false;
                     ClearButton.Hidden = true;
@@ -1038,7 +1122,7 @@ namespace FamilyManager
                 ValueLabel.SizeToFit( );
 
                 // if the label has a string, position the symbol near it.
-                if ( string.IsNullOrEmpty( ValueLabel.Text ) == false )
+                if ( string.IsNullOrWhiteSpace( ValueLabel.Text ) == false )
                 {
                     ValueSymbol.Layer.Position = new CGPoint( ValueLabel.Frame.Right + ( ValueSymbol.Bounds.Width / 2 ) + 5, ValueLabel.Frame.Top + ( ValueLabel.Bounds.Height / 2 ) );
                 }
@@ -1081,12 +1165,6 @@ namespace FamilyManager
                     InitialTransformedFrame = transformedFrame;
 
                     NSNotificationCenter.DefaultCenter.PostNotificationName( Rock.Mobile.PlatformSpecific.iOS.UI.KeyboardAdjustManager.TextControlDidBeginEditingNotification, NSValue.FromCGRect( transformedFrame ) );
-                    return true;
-                }
-
-                public override bool ShouldChangeCharacters(UITextField textField, NSRange range, string replacementString)
-                {
-                    NSNotificationCenter.DefaultCenter.PostNotificationName( Rock.Mobile.PlatformSpecific.iOS.UI.KeyboardAdjustManager.TextControlChangedNotification, NSValue.FromCGRect( InitialTransformedFrame ) );
                     return true;
                 }
             }

@@ -79,10 +79,10 @@ namespace FamilyManager
         public static bool IsFullAddress( Rock.Client.GroupLocation address )
         {
             // by full address, we mean street, city, state, zip
-            if ( string.IsNullOrEmpty( address.Location.Street1 ) == false &&
-                string.IsNullOrEmpty( address.Location.City ) == false &&
-                string.IsNullOrEmpty( address.Location.State ) == false &&
-                string.IsNullOrEmpty( address.Location.PostalCode ) == false )
+            if ( string.IsNullOrWhiteSpace( address.Location.Street1 ) == false &&
+                 string.IsNullOrWhiteSpace( address.Location.City ) == false &&
+                 string.IsNullOrWhiteSpace( address.Location.State ) == false &&
+                 string.IsNullOrWhiteSpace( address.Location.PostalCode ) == false )
             {
                 return true;
             }

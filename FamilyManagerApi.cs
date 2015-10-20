@@ -123,7 +123,7 @@ namespace FamilyManager
                 {
                     string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", personId, key, value );
 
-                    if( string.IsNullOrEmpty( value ) )
+                    if( string.IsNullOrWhiteSpace( value ) )
                     {
                         RockApi.Delete_People_AttributeValue( oDataFilter, resultHandler );
                     }
@@ -265,12 +265,12 @@ namespace FamilyManager
                             }
 
                             // are we deleting an existing number?
-                            if( string.IsNullOrEmpty( phoneNumber.Number ) == true && isNewPhoneNumber == false )
+                            if( string.IsNullOrWhiteSpace( phoneNumber.Number ) == true && isNewPhoneNumber == false )
                             {
                                 TryDeleteCellPhone( person, phoneNumber, personImage, resultHandler );
                             }
                             // are we updating or adding an existing?
-                            else if( string.IsNullOrEmpty( phoneNumber.Number ) == false )
+                            else if( string.IsNullOrWhiteSpace( phoneNumber.Number ) == false )
                             {
                                 TryUpdateCellPhone( person, isNewPhoneNumber, phoneNumber, personImage, resultHandler );
                             }
@@ -316,7 +316,7 @@ namespace FamilyManager
                         }
 
                         // if there's a phone number to send, send it.
-                        if( string.IsNullOrEmpty( phoneNumber.Number ) == false )
+                        if( string.IsNullOrWhiteSpace( phoneNumber.Number ) == false )
                         {
                             TryUpdateCellPhone( person, isNewPhoneNumber, phoneNumber, personImage, resultHandler );
                         }

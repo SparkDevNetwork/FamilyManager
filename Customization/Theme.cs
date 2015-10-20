@@ -239,7 +239,7 @@ namespace Customization
 
         void DownloadImage( string imageUrl, string imageFileName, string rockUrl, FileCache.FileDownloaded onResult )
         {
-            if ( string.IsNullOrEmpty( imageUrl ) == false )
+            if ( string.IsNullOrWhiteSpace( imageUrl ) == false )
             {
                 string qualifiedUrl;
                 if ( imageUrl[ 0 ] == '~' )

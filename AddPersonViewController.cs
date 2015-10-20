@@ -91,7 +91,11 @@ namespace FamilyManager
 
                     Button.TouchUpInside += (object sender, EventArgs e) => 
                         {
-                            Parent.FamilySelected( Family );
+                            // don't process the touch if there's no valid family
+                            if( Family != null )
+                            {
+                                Parent.FamilySelected( Family );
+                            }
                         };
                 }
 
@@ -135,9 +139,9 @@ namespace FamilyManager
                             address1Text = Family.HomeLocation.Street1;
 
                             // make sure the remainder exists
-                            if ( string.IsNullOrEmpty( Family.HomeLocation.City ) == false &&
-                                 string.IsNullOrEmpty( Family.HomeLocation.State ) == false &&
-                                 string.IsNullOrEmpty( Family.HomeLocation.PostalCode ) == false )
+                            if ( string.IsNullOrWhiteSpace( Family.HomeLocation.City ) == false &&
+                                 string.IsNullOrWhiteSpace( Family.HomeLocation.State ) == false &&
+                                 string.IsNullOrWhiteSpace( Family.HomeLocation.PostalCode ) == false )
                             {
                                 address2Text = Family.HomeLocation.City + ", " +
                                 Family.HomeLocation.State + " " +
