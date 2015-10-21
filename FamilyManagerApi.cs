@@ -121,7 +121,8 @@ namespace FamilyManager
             ApplicationApi.ResolvePersonAliasId( personAliasId, 
                 delegate(int personId )
                 {
-                    string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", personId, key, value );
+                    string urlEncodedValue = System.Net.WebUtility.UrlEncode( value );
+                    string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", personId, key, urlEncodedValue );
 
                     if( string.IsNullOrWhiteSpace( value ) )
                     {
@@ -136,8 +137,10 @@ namespace FamilyManager
 
         public static void UpdateOrAddFamilyAttribute( int familyId, string key, string value, HttpRequest.RequestResult resultHandler )
         {
-            string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", familyId, key, value );
+            string urlEncodedValue = System.Net.WebUtility.UrlEncode( value );
+            string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", familyId, key, urlEncodedValue );
 
+            //todo: add delete
             RockApi.Post_Groups_AttributeValue( oDataFilter, resultHandler );
         }
 
