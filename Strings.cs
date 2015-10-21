@@ -4,6 +4,8 @@ namespace FamilyManager
 {
     public class Strings
     {
+        public static string General_Version = "Version 1.0.2";
+        
         public static string General_RockBindError_NotFound = "Rock couldn't be found. Try that again.";
         public static string General_RockBindSuccess = "";
         public static string General_RockBindError_Data = "Rock was found, but there was a problem downloading data.";

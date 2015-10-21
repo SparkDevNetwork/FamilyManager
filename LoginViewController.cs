@@ -64,6 +64,8 @@ namespace FamilyManager
 
         UILabel LoginResult { get; set; }
 
+        UILabel Version { get; set; }
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -147,6 +149,16 @@ namespace FamilyManager
             View.AddSubview( LoginResult );
             Theme.StyleLabel( LoginResult, Config.Instance.VisualSettings.LabelStyle );
             LoginResult.TextAlignment = UITextAlignment.Center;
+
+            // version
+            Version = new UILabel();
+            Version.Layer.AnchorPoint = CGPoint.Empty;
+            Version.TextColor = UIColor.White;
+            Version.TextAlignment = UITextAlignment.Center;
+            Version.Text = Strings.General_Version;
+            Theme.StyleLabel( Version, Config.Instance.VisualSettings.LabelStyle );
+            Version.Font = Version.Font.WithSize( 14 );
+            View.AddSubview( Version );
         }
 
         public override void ViewDidLayoutSubviews( )
@@ -154,6 +166,8 @@ namespace FamilyManager
             base.ViewDidLayoutSubviews( );
 
             HeaderLabel.Frame = new CGRect( 0, View.Frame.Height * .05f, View.Frame.Width, HeaderLabel.Bounds.Height );
+
+            Version.Layer.Position = new CGPoint( ( View.Bounds.Width - Version.Bounds.Width ) / 2, HeaderLabel.Frame.Bottom );
 
             // measure and size the username field
             UserNameField.Bounds = new CGRect( 0, 0, View.Bounds.Width * .40f, 0 );
