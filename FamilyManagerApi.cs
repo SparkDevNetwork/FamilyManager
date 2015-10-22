@@ -247,6 +247,13 @@ namespace FamilyManager
             MemoryStream personImage, 
             HttpRequest.RequestResult resultHandler )
         {
+            // if they're a new person, flag them as a pending visitor.
+            if ( isNewPerson == true )
+            {
+                person.RecordStatusValueId = Settings.Rock_RecordStatusValueId_Pending;
+                person.ConnectionStatusValueId = Settings.Rock_ConnectionStatusValueId_Visitor;
+            }
+            
             ApplicationApi.UpdateOrAddPerson( person, isNewPerson, Config.Instance.CurrentPersonAliasId, 
                 delegate( System.Net.HttpStatusCode statusCode, string statusDescription )
                 {

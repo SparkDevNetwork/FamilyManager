@@ -267,24 +267,26 @@ namespace FamilyManager
             protected bool AttributesDirty( Dictionary<string, Rock.Client.AttributeValue> workingAttributeValues )
             {
                 // helper method that will take a list of attributes and compare them with what's in the UI panel.
-                
-                // check the attributes
-                List<KeyValuePair<string, string>> currentAttributeValues = new List<KeyValuePair<string, string>>( );
-                FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_RequiredControls, currentAttributeValues );
-                FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_OptionalControls, currentAttributeValues );
-
-                // make sure that for each key, the value matches
-                foreach ( KeyValuePair<string, string> attrib in currentAttributeValues )
+                if ( workingAttributeValues != null )
                 {
-                    // find the matching key in their original attribute list, and compare.
-                    KeyValuePair<string, Rock.Client.AttributeValue> workingAttrib = workingAttributeValues.Where( wa => wa.Key == attrib.Key ).SingleOrDefault( );
-                    if ( workingAttrib.Key != null )
+                    // check the attributes
+                    List<KeyValuePair<string, string>> currentAttributeValues = new List<KeyValuePair<string, string>>();
+                    FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_RequiredControls, currentAttributeValues );
+                    FamilyManager.UI.Dynamic_UIFactory.UIToAttributes( Dynamic_OptionalControls, currentAttributeValues );
+
+                    // make sure that for each key, the value matches
+                    foreach ( KeyValuePair<string, string> attrib in currentAttributeValues )
                     {
-                        // before testing, make sure we take an empty string instead of null for the working attribute.
-                        string workingAttribValue = workingAttrib.Value.Value == null ? string.Empty : workingAttrib.Value.Value;
-                        if ( attrib.Value != workingAttribValue )
+                        // find the matching key in their original attribute list, and compare.
+                        KeyValuePair<string, Rock.Client.AttributeValue> workingAttrib = workingAttributeValues.Where( wa => wa.Key == attrib.Key ).SingleOrDefault( );
+                        if ( workingAttrib.Key != null )
                         {
-                            return true;
+                            // before testing, make sure we take an empty string instead of null for the working attribute.
+                            string workingAttribValue = workingAttrib.Value.Value == null ? string.Empty : workingAttrib.Value.Value;
+                            if ( attrib.Value != workingAttribValue )
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -377,6 +379,10 @@ namespace FamilyManager
             protected Dynamic_UIToggle MaritalStatusToggle { get; set; }
             protected Dictionary<string, Rock.Client.AttributeValue> WorkingAttributeValues;
 
+            public AdultMemberPanel( ) : base( )
+            {
+                WorkingAttributeValues = new Dictionary<string, Rock.Client.AttributeValue>( );
+            }
 
             public override void Copy( BaseMemberPanel rhs )
             {
@@ -585,6 +591,11 @@ namespace FamilyManager
         {
             Dynamic_UIDropDown GradeDropDown { get; set; }
             protected Dictionary<string, Rock.Client.AttributeValue> WorkingAttributeValues;
+
+            public ChildMemberPanel( ) : base( )
+            {
+                WorkingAttributeValues = new Dictionary<string, Rock.Client.AttributeValue>( );
+            }
 
             public override void Copy( BaseMemberPanel rhs )
             {

@@ -4,6 +4,9 @@ namespace FamilyManager
 {
     public class Settings
     {
+        public const int Rock_RecordStatusValueId_Pending = 5;
+        public const int Rock_ConnectionStatusValueId_Visitor = 66;
+        
         public const float LogoWidth = 113;
         public const float LogoHeight = 55;
         
