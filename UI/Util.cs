@@ -169,6 +169,54 @@ namespace FamilyManager
                 Container.AddSubview( Address2 );
             }
 
+            /// <summary>
+            /// Use if you want the standard formatting for a family.
+            /// </summary>
+            public void FormatCell( nfloat cellWidth, Rock.Client.Family family )
+            {
+                // set the title (their last name)
+                string title = family.Name;
+
+                // create and add the person entry. First see if they're an adult or child
+                string adultMembersText = string.Empty;
+                string childMembersText = string.Empty;
+                if ( family.FamilyMembers.Count > 0 )
+                {
+                    // first do adults
+                    adultMembersText = Strings.General_Adults + ": ";
+                    adultMembersText += GetMembersOfTypeString( family.FamilyMembers, Config.Instance.FamilyMemberAdultGroupRole.Id );
+
+                    // now add kids
+                    childMembersText = Strings.General_Children + ": ";
+                    childMembersText += GetMembersOfTypeString( family.FamilyMembers, Config.Instance.FamilyMemberChildGroupRole.Id );
+                }
+
+                // Create the first address line
+                string address1Text = Strings.General_NoAddress;
+                string address2Text = string.Empty;
+
+                if ( family.HomeLocation != null )
+                {
+                    address1Text = family.HomeLocation.Street1;
+
+                    // make sure the remainder exists
+                    if ( string.IsNullOrWhiteSpace( family.HomeLocation.City ) == false &&
+                         string.IsNullOrWhiteSpace( family.HomeLocation.State ) == false &&
+                         string.IsNullOrWhiteSpace( family.HomeLocation.PostalCode ) == false )
+                    {
+                        address2Text = family.HomeLocation.City + ", " +
+                                       family.HomeLocation.State + " " +
+                                       family.HomeLocation.PostalCode;
+                    }
+                }
+
+                // now use our "other" formatting function to lay out the properties the way we want.
+                FormatCell( cellWidth, title, adultMembersText, childMembersText, address1Text, address2Text );
+            }
+
+            /// <summary>
+            /// Use if you want to display custom info (like maybe use it for a No Search Results) entry.
+            /// </summary>
             public void FormatCell( nfloat cellWidth, string title, string adultMembers, string childMembers, string address1, string address2 )
             {
                 nfloat containerWidth = cellWidth - 20;

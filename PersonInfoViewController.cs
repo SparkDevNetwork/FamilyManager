@@ -58,6 +58,12 @@ namespace FamilyManager
 
         class BaseMemberPanel
         {
+            public class AllowedCheckinResult
+            {
+                public UIButton Button { get; set; }
+                public FamilySearchResultView FamilyView { get; set; }
+            }
+            
             protected static nfloat verticalControlSpacing = 30;
 
             protected Dynamic_UITextField FirstName { get; set; }
@@ -76,11 +82,20 @@ namespace FamilyManager
 
             public List<KeyValuePair<string, string>> PendingAttribUpdates { get; protected set; }
 
+            public UILabel AllowedCheckinsHeader { get; set; }
+
+            public List<AllowedCheckinResult> AllowedCheckins { get; set; }
+            public List<Rock.Client.Family> AllowedCheckinFamilies { get; set; }
+
+            public PersonInfoViewController Parent { get; set; }
+
             public BaseMemberPanel( )
             {
                 Dynamic_RequiredControls = new List<IDynamic_UIView>();
                 Dynamic_OptionalControls = new List<IDynamic_UIView>();
                 PendingAttribUpdates = new List<KeyValuePair<string, string>>();
+
+                AllowedCheckins = new List<AllowedCheckinResult>( );
             }
 
             public virtual void Copy( BaseMemberPanel rhs )
@@ -93,10 +108,29 @@ namespace FamilyManager
 
                 PhoneNumber.SetCurrentValue( rhs.PhoneNumber.GetCurrentValue( ) );
                 EmailAddress.SetCurrentValue( rhs.EmailAddress.GetCurrentValue( ) );
+
+                // copy the checkin buttons. First remove existing ones
+                RemoveAllowedCheckinList( );
+
+                // then add the new ones
+                if( rhs.AllowedCheckinFamilies != null )
+                {
+                    AllowedCheckinFamilies = new List<Rock.Client.Family>( rhs.AllowedCheckinFamilies );
+                    foreach( Rock.Client.Family family in AllowedCheckinFamilies )
+                    {
+                        CreateAllowedCheckinEntry( family );
+                    }
+                }
+                else
+                {
+                    AllowedCheckinFamilies = null;
+                }
             }
 
-            public virtual void ViewDidLoad( UIViewController parentViewController )
+            public virtual void ViewDidLoad( PersonInfoViewController parentViewController )
             {
+                Parent = parentViewController;
+
                 RootView = new UIView();
                 RootView.Layer.AnchorPoint = CGPoint.Empty;
 
@@ -125,9 +159,24 @@ namespace FamilyManager
                 PhoneNumber = new Dynamic_UITextField( parentViewController, RootView, Strings.General_PhoneNumber, false, false );
                 PhoneNumber.GetTextField( ).Delegate = new PhoneNumberFormatterDelegate( );
                 PhoneNumber.AddToView( RootView );
+
+                AllowedCheckinsHeader = new UILabel( );
+                AllowedCheckinsHeader.Layer.AnchorPoint = CGPoint.Empty;
+                AllowedCheckinsHeader.Text = "Allow Checkins By";
+                AllowedCheckinsHeader.SizeToFit( );
+                Theme.StyleLabel( AllowedCheckinsHeader, Config.Instance.VisualSettings.LabelStyle );
+                RootView.AddSubview( AllowedCheckinsHeader );
             }
 
-            public virtual void PersonInfoToUI( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber, Dictionary<string, Rock.Client.AttributeValue> attributeValues )
+            public virtual void ViewWillDisappear( )
+            {
+                RemoveAllowedCheckinList( );
+            }
+
+            public virtual void PersonInfoToUI( Rock.Client.Person workingPerson, 
+                                                Rock.Client.PhoneNumber workingPhoneNumber, 
+                                                Dictionary<string, Rock.Client.AttributeValue> attributeValues, 
+                                                List<Rock.Client.Family> allowedCheckinList )
             {
                 FirstName.SetCurrentValue( workingPerson.NickName );
                 LastName.SetCurrentValue( workingPerson.LastName );
@@ -153,6 +202,55 @@ namespace FamilyManager
                 else
                 {
                     GenderToggle.SetCurrentValue( "" );
+                }
+
+                // lastly, create entries for each person that has checkin permissions
+                if( allowedCheckinList != null )
+                {
+                    AllowedCheckinFamilies = new List<Rock.Client.Family>( allowedCheckinList );
+                    foreach( Rock.Client.Family family in AllowedCheckinFamilies )
+                    {
+                        CreateAllowedCheckinEntry( family );
+                    }
+                }
+                else
+                {
+                    AllowedCheckinFamilies = null;
+                }
+            }
+
+            void CreateAllowedCheckinEntry( Rock.Client.Family family )
+            {
+                AllowedCheckinResult checkinResult = new AllowedCheckinResult( );
+
+                // create the overlay button that will let them tap the result.
+                checkinResult.Button = new UIButton( UIButtonType.System );
+                checkinResult.Button.Layer.AnchorPoint = CGPoint.Empty;
+                checkinResult.Button.TouchUpInside += (object sender, EventArgs e) => 
+                {
+                    Parent.AllowedCheckinButtonClicked( family );
+                };
+
+                // create the familyView for the entry
+                checkinResult.FamilyView = new FamilySearchResultView( );
+                checkinResult.FamilyView.AddSubview( checkinResult.Button );
+
+                RootView.AddSubview( checkinResult.FamilyView );
+                AllowedCheckins.Add( checkinResult );
+            }
+
+            void RemoveAllowedCheckinList( )
+            {
+                // remove any dynamic buttons that were added for checkin permissions.
+                if ( AllowedCheckinFamilies != null )
+                {
+                    foreach( AllowedCheckinResult checkinResult in AllowedCheckins )
+                    {
+                        checkinResult.Button.RemoveFromSuperview( );
+                        checkinResult.FamilyView.RemoveFromSuperview( );
+                    }
+                    AllowedCheckins.Clear( );
+                    AllowedCheckinFamilies.Clear( );
                 }
             }
 
@@ -191,7 +289,6 @@ namespace FamilyManager
                         break;
                     }
                 }
-
             }
 
             public virtual bool IsInfoDirty( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber )
@@ -355,13 +452,15 @@ namespace FamilyManager
                 EmailAddress.ViewDidLayoutSubviews( new CGRect( 0, 0, parentBounds.Width / 2, parentBounds.Height ) );
                 EmailAddress.Layer.Position = new CGPoint( 10, BirthdatePicker.Frame.Bottom + verticalControlSpacing );
 
-
                 nfloat phoneNumberWidth = parentBounds.Width - EmailAddress.Bounds.Width - 40;
                 PhoneNumber.ViewDidLayoutSubviews( new CGRect( 0, 0, phoneNumberWidth, parentBounds.Height ) );
                 PhoneNumber.Layer.Position = new CGPoint( EmailAddress.Frame.Right + 20, BirthdatePicker.Frame.Bottom + verticalControlSpacing );
 
+                // and gender
                 GenderToggle.ViewDidLayoutSubviews( legalBounds );
                 GenderToggle.Layer.Position = new CGPoint( 10, EmailAddress.Frame.Bottom + verticalControlSpacing );
+
+                // leave it to the parent to do the "Allow Checkin By"
             }
 
             public UIView GetRootView( )
@@ -375,7 +474,6 @@ namespace FamilyManager
         /// </summary>
         class AdultMemberPanel : BaseMemberPanel
         {
-            //UIToggle MaritalStatusToggle { get; set; }
             protected Dynamic_UIToggle MaritalStatusToggle { get; set; }
             protected Dictionary<string, Rock.Client.AttributeValue> WorkingAttributeValues;
 
@@ -396,9 +494,12 @@ namespace FamilyManager
                 MaritalStatusToggle.SetCurrentValue( "" );
             }
 
-            public override void PersonInfoToUI( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber, Dictionary<string, Rock.Client.AttributeValue> attributeValues )
+            public override void PersonInfoToUI( Rock.Client.Person workingPerson, 
+                                                 Rock.Client.PhoneNumber workingPhoneNumber, 
+                                                 Dictionary<string, Rock.Client.AttributeValue> attributeValues, 
+                                                 List<Rock.Client.Family> allowedCheckinList )
             {
-                base.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues );
+                base.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues, allowedCheckinList );
 
                 // set the marital status. default to Unknown
                 MaritalStatusToggle.SetCurrentValue( "" );
@@ -497,7 +598,7 @@ namespace FamilyManager
                 return true;
             }
 
-            public override void ViewDidLoad( UIViewController parentViewController )
+            public override void ViewDidLoad( PersonInfoViewController parentViewController )
             {
                 base.ViewDidLoad( parentViewController );
 
@@ -581,6 +682,30 @@ namespace FamilyManager
                     controlYPos = dynamicView.GetFrame( ).Bottom + verticalControlSpacing;
                 }
 
+                // finally add allowed checkin people
+                if( AllowedCheckins.Count > 0 )
+                {
+                    // setup the header
+                    AllowedCheckinsHeader.Hidden = false;
+                    AllowedCheckinsHeader.Layer.Position = new CGPoint( 10, controlYPos );
+                    controlYPos = AllowedCheckinsHeader.Frame.Bottom + verticalControlSpacing / 2;
+
+                    // add in each entry
+                    int i;
+                    for( i = 0; i < AllowedCheckins.Count; i++ )
+                    {
+                        AllowedCheckins[ i ].FamilyView.FormatCell( legalBounds.Width, AllowedCheckinFamilies[ i ] );
+                        AllowedCheckins[ i ].Button.Bounds = AllowedCheckins[ i ].FamilyView.Bounds;
+
+                        AllowedCheckins[ i ].FamilyView.Layer.Position = new CGPoint( 10, controlYPos );
+                        controlYPos = AllowedCheckins[ i ].FamilyView.Frame.Bottom + verticalControlSpacing;
+                    }
+                }
+                else
+                {
+                    AllowedCheckinsHeader.Hidden = true;
+                }
+
                 // wrap our view around the control
                 RootView.Bounds = new CGRect( 0, 0, parentBounds.Width, controlYPos );
             }
@@ -608,9 +733,12 @@ namespace FamilyManager
                 GradeDropDown.SetCurrentValue( string.Empty );
             }
 
-            public override void PersonInfoToUI( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber, Dictionary<string, Rock.Client.AttributeValue> attributeValues )
+            public override void PersonInfoToUI( Rock.Client.Person workingPerson, 
+                                                 Rock.Client.PhoneNumber workingPhoneNumber, 
+                                                 Dictionary<string, Rock.Client.AttributeValue> attributeValues, 
+                                                 List<Rock.Client.Family> allowedCheckinList )
             {
-                base.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues );
+                base.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues, allowedCheckinList );
 
                 // set their grade (if they have it)
                 GradeDropDown.SetCurrentValue( string.Empty );
@@ -682,7 +810,7 @@ namespace FamilyManager
                 return base.IsInfoDirty( workingPerson, workingPhoneNumber );
             }
 
-            public override void ViewDidLoad( UIViewController parentViewController )
+            public override void ViewDidLoad( PersonInfoViewController parentViewController )
             {
                 base.ViewDidLoad( parentViewController );
 
@@ -795,6 +923,30 @@ namespace FamilyManager
                     dynamicView.SetPosition( new CGPoint( 10, controlYPos ) );
 
                     controlYPos = dynamicView.GetFrame( ).Bottom + verticalControlSpacing;
+                }
+
+                // finally add allowed checkin people
+                if( AllowedCheckins.Count > 0 )
+                {
+                    // setup the header
+                    AllowedCheckinsHeader.Hidden = false;
+                    AllowedCheckinsHeader.Layer.Position = new CGPoint( 10, controlYPos );
+                    controlYPos = AllowedCheckinsHeader.Frame.Bottom + verticalControlSpacing / 2;
+
+                    // add in each entry
+                    int i;
+                    for( i = 0; i < AllowedCheckins.Count; i++ )
+                    {
+                        AllowedCheckins[ i ].FamilyView.FormatCell( legalBounds.Width, AllowedCheckinFamilies[ i ] );
+                        AllowedCheckins[ i ].Button.Bounds = AllowedCheckins[ i ].FamilyView.Bounds;
+
+                        AllowedCheckins[ i ].FamilyView.Layer.Position = new CGPoint( 10, controlYPos );
+                        controlYPos = AllowedCheckins[ i ].FamilyView.Frame.Bottom + verticalControlSpacing;
+                    }
+                }
+                else
+                {
+                    AllowedCheckinsHeader.Hidden = true;
                 }
 
                 // wrap our view around the control
@@ -1200,7 +1352,11 @@ namespace FamilyManager
             }
         }
 
-        void PersonInfoToUI( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber, bool isChild, Dictionary<string, Rock.Client.AttributeValue> attributeValues )
+        void PersonInfoToUI( Rock.Client.Person workingPerson, 
+                             Rock.Client.PhoneNumber workingPhoneNumber, 
+                             bool isChild, 
+                             Dictionary<string, Rock.Client.AttributeValue> attributeValues, 
+                             List<Rock.Client.Family> allowedCheckinList )
         {
             // reset the pending updates for attributes
             AdultPanel.PendingAttribUpdates.Clear( );
@@ -1224,10 +1380,15 @@ namespace FamilyManager
             }
 
             // set the appropriate info
-            AdultPanel.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues );
-            ChildPanel.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues );
+            AdultPanel.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues, allowedCheckinList );
+            ChildPanel.PersonInfoToUI( workingPerson, workingPhoneNumber, attributeValues, allowedCheckinList );
 
             ActivePanel.GetRootView( ).Hidden = false;
+        }
+
+        public void AllowedCheckinButtonClicked( Rock.Client.Family family )
+        {
+            Parent.PresentFamilyPage( family );
         }
 
         bool IsNewPerson { get; set; }
@@ -1247,6 +1408,7 @@ namespace FamilyManager
                                      bool isChild,
                                      Dictionary<string, Rock.Client.AttributeValue> attributeValues, 
                                      NSData profilePicBuffer, 
+                                     List<Rock.Client.Family> allowedCheckinList,
                                      FamilyInfoViewController.OnPersonInfoCompleteDelegate onComplete )
         {
             OnCompleteDelegate = onComplete;
@@ -1282,7 +1444,7 @@ namespace FamilyManager
                 IsNewPhoneNumber = false;
             }
 
-            PersonInfoToUI( WorkingPerson, WorkingPhoneNumber, isChild, attributeValues );
+            PersonInfoToUI( WorkingPerson, WorkingPhoneNumber, isChild, attributeValues, allowedCheckinList );
 
             // set their profile picture
             UpdateProfilePic( profilePicBuffer );
@@ -1352,6 +1514,10 @@ namespace FamilyManager
                     {
                         // hide ourselves
                         View.Hidden = true;
+
+                        // give the panels a chance to clean up any resources they need to
+                        ChildPanel.ViewWillDisappear( );
+                        AdultPanel.ViewWillDisappear( );
 
                         IsDismissing = false;
 

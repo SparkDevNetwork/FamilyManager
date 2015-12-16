@@ -1532,9 +1532,8 @@ namespace FamilyManager
         {
             BlockerView.Show( delegate
                 {
-                    // get their attributes before presenting.
-                    ApplicationApi.GetPersonById( familyMember.Person.Id, true, 
-                        delegate(System.Net.HttpStatusCode statusCode, string statusDescription, Rock.Client.Person refreshedPerson )
+                    FamilyManagerApi.GetPersonForEdit( familyMember, 
+                        delegate( Rock.Client.Person refreshedPerson, List<Rock.Client.Family> allowedCheckinList )
                         {
                             BlockerView.Hide( delegate
                                 {
@@ -1545,7 +1544,7 @@ namespace FamilyManager
                                     bool isChild = familyMember.GroupRoleId == Config.Instance.FamilyMemberChildGroupRole.Id ? true : false;
 
                                     // present the new view controller, and implement an anon-delegate to handle the resposne
-                                    PersonInfoViewController.PresentAnimated( Family.Id, Family.Name, familyMember.Person, isChild, refreshedPerson.AttributeValues, imageBuffer,
+                                    PersonInfoViewController.PresentAnimated( Family.Id, Family.Name, familyMember.Person, isChild, refreshedPerson.AttributeValues, imageBuffer, allowedCheckinList,
                                         delegate(bool didSave, int workingFamilyId, bool personIsChild, object context) 
                                         {
                                             // re-activate our keyboard manager
@@ -1565,7 +1564,7 @@ namespace FamilyManager
                                             }
                                         });
                                 });
-                        } );
+                        });
                 } );
         }
 
@@ -1646,7 +1645,7 @@ namespace FamilyManager
                 familyLastName = UI.FamilySuffixManager.FamilyNameNoSuffix( FamilyName.GetCurrentValue( ) );
             }
 
-            PersonInfoViewController.PresentAnimated( workingFamilyId, familyLastName, null, false, null, null, OnNewPersonComplete );
+            PersonInfoViewController.PresentAnimated( workingFamilyId, familyLastName, null, false, null, null, null, OnNewPersonComplete );
         }
 
         public delegate void OnPersonInfoCompleteDelegate( bool didSave, int workingFamilyId, bool isChild, object context );

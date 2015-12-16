@@ -16,6 +16,7 @@ namespace FamilyManager
         UINavigationController SubNavigationController { get; set; }
         HistoryBar HistoryBar { get; set; }
         UIButton HomeButton { get; set; }
+        UIButton AddFamilyButton { get; set; }
         SettingsViewController SettingsViewController { get; set; }
         FamilyInfoViewController CurrentFamilyInfoViewController { get; set; }
         SearchFamiliesViewController SearchFamiliesViewController { get; set; }
@@ -62,8 +63,41 @@ namespace FamilyManager
 
                     // turn off the home button
                     HomeButton.Enabled = false;
+
+                    // and enable the add family button
+                    AddFamilyButton.Enabled = true;
                 };
-            this.NavigationItem.SetLeftBarButtonItem( new UIBarButtonItem( HomeButton ), false );
+
+
+            // set the "Add Family" button
+            buttonLabel = new NSString( "" );
+
+            AddFamilyButton = new UIButton(UIButtonType.System);
+            AddFamilyButton.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( "Bh", 36 );
+            AddFamilyButton.SetTitle( buttonLabel.ToString( ), UIControlState.Normal );
+            AddFamilyButton.SetTitleColor( Theme.GetColor( Config.Instance.VisualSettings.TopHeaderTextColor ), UIControlState.Normal );
+            AddFamilyButton.SetTitleColor( UIColor.DarkGray, UIControlState.Disabled );
+
+            // determine its dimensions
+            buttonSize = buttonLabel.StringSize( HomeButton.Font );
+            AddFamilyButton.Bounds = new CGRect( 0, 0, buttonSize.Width, buttonSize.Height );
+
+            // set its callback
+            AddFamilyButton.TouchUpInside += (object sender, EventArgs e) => 
+            {
+                // clear any current family VC
+                CurrentFamilyInfoViewController = null;
+
+                // and present a new family page
+                PresentNewFamilyPage( );
+            };
+
+            UIBarButtonItem[] leftItems = new UIBarButtonItem[]
+            {
+                new UIBarButtonItem( HomeButton ),
+                new UIBarButtonItem( AddFamilyButton )
+            };
+            this.NavigationItem.SetLeftBarButtonItems( leftItems, false );
 
 
             // First setup the campus button, which rests in the upper right
@@ -206,6 +240,9 @@ namespace FamilyManager
         {
             // call the presentation function
             PresentFamilyPage_Internal( null );
+
+            // and disable the add family button, since we KNOW we're creating a new family.
+            AddFamilyButton.Enabled = false;
         }
 
         public void PresentFamilyPage( Rock.Client.Family family )
@@ -247,6 +284,7 @@ namespace FamilyManager
                 }
 
                 HomeButton.Enabled = true;
+                AddFamilyButton.Enabled = true;
             }
         }
 

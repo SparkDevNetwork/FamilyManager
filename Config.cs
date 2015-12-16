@@ -17,6 +17,8 @@ namespace FamilyManager
     /// </summary>
     public class Config
     {
+        const int CURRENT_VERSION = 1;
+
         const string FileName = "config.dat";
 
         static Config _Instance = new Config( );
@@ -90,6 +92,9 @@ namespace FamilyManager
         }
 
         [JsonProperty]
+        public int Version { get; set; }
+
+        [JsonProperty]
         public List<Rock.Client.DefinedValue> MaritalStatus { get; set; }
 
         [JsonProperty]
@@ -106,6 +111,9 @@ namespace FamilyManager
 
         [JsonProperty]
         public Rock.Client.GroupTypeRole CanCheckInGroupRole { get; set; }
+
+        [JsonProperty]
+        public Rock.Client.GroupTypeRole AllowedCheckInByRole { get; set; }
 
         [JsonProperty]
         public List<Rock.Client.DefinedValue> ConfigurationTemplates { get; set; }
@@ -180,6 +188,16 @@ namespace FamilyManager
                 string json = JsonConvert.SerializeObject( _Instance );
                 writer.WriteLine( json );
             }
+        }
+
+        public bool NeedsUpdate( )
+        {
+            if ( Version < CURRENT_VERSION )
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public delegate void OnComplete( bool result );
@@ -322,7 +340,6 @@ namespace FamilyManager
                         TempAdultRole = model[ 0 ];
 
                         GetFirstTimeVisitAttribValue( onComplete );
-                        //GetCanCheckInGroupTypeRole( onComplete );
                     }
                     // Adult Role Failed
                     else
@@ -362,10 +379,30 @@ namespace FamilyManager
                     {
                         TempCanCheckInRole = model[ 0 ];
 
+                        GetAllowedToCheckInGroupTypeRole( onComplete );
+                    }
+                    // Can Check In Role Failed
+                    else
+                    {
+                        onComplete( false );
+                    }
+                } );
+        }
+
+        Rock.Client.GroupTypeRole TempAllowedCheckInByRole { get; set; }
+        void GetAllowedToCheckInGroupTypeRole( OnComplete onComplete )
+        {
+            ApplicationApi.GetGroupTypeRoleForGuid( Rock.Client.SystemGuid.GroupRole.GROUPROLE_KNOWN_RELATIONSHIPS_ALLOW_CHECK_IN_BY,
+                delegate(System.Net.HttpStatusCode statusCode, string statusDescription, List<Rock.Client.GroupTypeRole> model )
+                {
+                    if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) == true && model != null && model.Count > 0 )
+                    {
+                        TempAllowedCheckInByRole = model[ 0 ];
+
                         // Note: add more stuff here if you need.
                         onComplete( true );
                     }
-                    // Can Check In Role Failed
+                    // Allowed Check In By Role Failed
                     else
                     {
                         onComplete( false );
@@ -392,6 +429,8 @@ namespace FamilyManager
 
             CanCheckInGroupRole = TempCanCheckInRole;
 
+            AllowedCheckInByRole = TempAllowedCheckInByRole;
+
             ConfigurationTemplates = TempConfigurationTemplates;
 
             SetCampuses( TempCampuses );
@@ -399,6 +438,9 @@ namespace FamilyManager
             // permenantly update the api values.
             RockApi.SetRockURL( RockURL );
             RockApi.SetAuthorizationKey( RockAuthorizationKey );
+
+            // stamp the version as well.
+            Version = CURRENT_VERSION;
         }
 
 

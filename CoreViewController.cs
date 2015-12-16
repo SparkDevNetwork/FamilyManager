@@ -101,8 +101,9 @@ namespace FamilyManager
             {
                 ViewDidAppearCalled = true;
 
-                // when deciding which ViewController to start with, check to see if we have a RockURL
-                if ( string.IsNullOrWhiteSpace( Config.Instance.RockURL ) == true )
+                // when deciding which ViewController to start with, check to see if we have a RockURL OR
+                // if the Config file needs to be updated. (Which would be true if this is the first run since an upgrade)
+                if ( string.IsNullOrWhiteSpace( Config.Instance.RockURL ) == true || Config.Instance.NeedsUpdate( ) == true )
                 {
                     // we need to know where Rock is, so prompt them for this.
                     PresentViewController( FirstRunViewController, false, null );

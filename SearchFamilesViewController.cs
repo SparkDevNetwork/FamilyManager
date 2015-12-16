@@ -119,43 +119,7 @@ namespace FamilyManager
                     // is this an actual family row? (as opposed to our bottom dummy row)
                     if ( indexPath.Row < Parent.Families.Count )
                     {
-                        // set the title (their last name)
-                        string title = Parent.Families[ indexPath.Row ].Name;
-
-                        // create and add the person entry. First see if they're an adult or child
-                        string adultMembersText = string.Empty;
-                        string childMembersText = string.Empty;
-                        if ( Parent.Families[ indexPath.Row ].FamilyMembers.Count > 0 )
-                        {
-                            // first do adults
-                            adultMembersText = Strings.General_Adults + ": ";
-                            adultMembersText += cell.FamilyView.GetMembersOfTypeString( Parent.Families[ indexPath.Row ].FamilyMembers, Config.Instance.FamilyMemberAdultGroupRole.Id );
-
-                            // now add kids
-                            childMembersText = Strings.General_Children + ": ";
-                            childMembersText += cell.FamilyView.GetMembersOfTypeString( Parent.Families[ indexPath.Row ].FamilyMembers, Config.Instance.FamilyMemberChildGroupRole.Id );
-                        }
-
-                        // Create the first address line
-                        string address1Text = Strings.General_NoAddress;
-                        string address2Text = string.Empty;
-
-                        if ( Parent.Families[ indexPath.Row ].HomeLocation != null )
-                        {
-                            address1Text = Parent.Families[ indexPath.Row ].HomeLocation.Street1;
-
-                            // make sure the remainder exists
-                            if ( string.IsNullOrWhiteSpace( Parent.Families[ indexPath.Row ].HomeLocation.City ) == false &&
-                                 string.IsNullOrWhiteSpace( Parent.Families[ indexPath.Row ].HomeLocation.State ) == false &&
-                                 string.IsNullOrWhiteSpace( Parent.Families[ indexPath.Row ].HomeLocation.PostalCode ) == false )
-                            {
-                                address2Text = Parent.Families[ indexPath.Row ].HomeLocation.City + ", " +
-                                               Parent.Families[ indexPath.Row ].HomeLocation.State + " " +
-                                               Parent.Families[ indexPath.Row ].HomeLocation.PostalCode;
-                            }
-                        }
-
-                        cell.FamilyView.FormatCell( cellWidth, title, adultMembersText, childMembersText, address1Text, address2Text );
+                        cell.FamilyView.FormatCell( cellWidth, Parent.Families[ indexPath.Row ] );
 
                         cell.Bounds = cell.FamilyView.Bounds;
 

@@ -5,6 +5,8 @@ using Rock.Mobile;
 using Rock.Mobile.Util;
 using System.Collections.Generic;
 using System.IO;
+using System.Collections.Concurrent;
+using System.Linq;
 
 namespace FamilyManager
 {
@@ -490,6 +492,139 @@ namespace FamilyManager
             else
             {
                 resultHandler( HttpStatusCode.OK, "" );
+            }
+        }
+
+        /// <summary>
+        /// This gets all the info needed to let Family Manager edit a person. That includes:
+        /// The Person info, and a list of all Rock.Client.Family entities that can check this person in.
+        /// THAT process involves: 
+        /// 1. Getting all GroupMembers with a AllowCheckin relationship.
+        /// 2. Getting all families of each GroupMember as Rock.Client.Group
+        /// 3. Finally, converting all Rock.Client.Groups to actual Rock.Client.Family
+        /// </summary>
+        public delegate void PersonEditResponseDelegate( Rock.Client.Person person, List<Rock.Client.Family> allowedCheckinList );
+        public static void GetPersonForEdit( Rock.Client.GroupMember groupMember, PersonEditResponseDelegate response )
+        {
+            // get their attributes before presenting.
+            ApplicationApi.GetPersonById( groupMember.Person.Id, true, 
+                delegate(System.Net.HttpStatusCode statusCode, string statusDescription, Rock.Client.Person refreshedPerson )
+                {
+                    if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) && refreshedPerson != null )
+                    {
+                        // get the people allowed to check them in
+                        string query = string.Format( "?personId={0}&relationshipRoleId={1}", groupMember.Person.Id, Config.Instance.AllowedCheckInByRole.Id );
+
+                        RockApi.Get_GroupMembers_KnownRelationships( query, delegate(HttpStatusCode knownRelationshipCode, string knownRelationshipDesc, List<Rock.Client.GroupMember> groupMembers ) 
+                            {
+                                if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) )
+                                {
+                                    // and lastly, from that, get the families of these group members
+                                    if( groupMembers.Count > 0 )
+                                    {
+                                        GroupMembersToFamilyGroups( refreshedPerson, groupMembers, response );
+                                    }
+                                    else
+                                    {
+                                        response( refreshedPerson, null );
+                                    }
+                                }
+                                else
+                                {
+                                    response( null, null );
+                                }
+                            });
+                    }
+                    else
+                    {
+                        response( null, null );
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Helper function to prevent GetPersonForEdit from getting crazy long. Given a list of Rock.Client.GroupMember,
+        /// this gets the all families (as Rock.Client.Group) for each GroupMember.
+        /// </summary>
+        static void GroupMembersToFamilyGroups( Rock.Client.Person refreshedPerson, List<Rock.Client.GroupMember> groupMembers, PersonEditResponseDelegate response )
+        {
+            // first, we need to get the families for each group member
+            int groupMembersResolved = 0;
+            List<Rock.Client.Group> groupFamilies = new List<Rock.Client.Group>( );
+
+            foreach( Rock.Client.GroupMember member in groupMembers )
+            {
+                RockApi.Get_FamiliesOfPerson( member.PersonId, string.Empty, 
+                    delegate(HttpStatusCode statusCode, string statusDescription, List<Rock.Client.Group> groups) 
+                    {
+                        if( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) )
+                        {
+                            // serialize the responses on the UI thread so we can be sure it's all thread safe
+                            Rock.Mobile.Threading.Util.PerformOnUIThread( 
+                                delegate
+                                {
+                                    // first, add the returned groups to our global list.
+                                    foreach( Rock.Client.Group group in groups )
+                                    {
+                                        // make sure we don't already have this group in our list
+                                        Rock.Client.Group resultGroup = groupFamilies.Where( g => g.Id == group.Id ).FirstOrDefault( );
+                                        if( resultGroup == null )
+                                        {
+                                            groupFamilies.Add( group );
+                                        }
+                                    }
+
+                                    // now see if we're done waiting for all responses.
+                                    groupMembersResolved++;
+                                    if( groupMembersResolved == groupMembers.Count )
+                                    {
+                                        GroupsToFamilies( groupFamilies, refreshedPerson, response );
+                                    }
+                                });
+                        }
+                        // if any of them fail, then fail.
+                        else
+                        {
+                            response( null, null );
+                        }
+                    });
+            }
+        }
+
+        /// <summary>
+        /// Second helper method for GetPersonForEdit. This basically takes a list of Rock.Client.Group and gets the Rock.Client.Family for each one.
+        /// </summary>
+        static void GroupsToFamilies( List<Rock.Client.Group> groupFamilies, Rock.Client.Person refreshedPerson, PersonEditResponseDelegate response )
+        {
+            List<Rock.Client.Family> families = new List<Rock.Client.Family>( );
+            int groupsResolved = 0;
+            
+            // now get all the FAMILY objects for these family GROUPS
+            foreach( Rock.Client.Group group in groupFamilies )
+            {
+                RockApi.Get_Groups_GetFamily( group.Id, 
+                    delegate(HttpStatusCode statusCode, string statusDescription, Rock.Client.Family model) 
+                    {
+                        if( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) )
+                        {
+                            // serialize the responses on the UI thread so we can be sure it's all thread safe
+                            Rock.Mobile.Threading.Util.PerformOnUIThread( 
+                                delegate
+                                {
+                                    families.Add( model );
+
+                                    groupsResolved++;
+                                    if( groupsResolved == groupFamilies.Count )
+                                    {
+                                        response( refreshedPerson, families );
+                                    }
+                                });
+                        }
+                        else
+                        {
+                            response( null, null );
+                        }
+                    });
             }
         }
     }

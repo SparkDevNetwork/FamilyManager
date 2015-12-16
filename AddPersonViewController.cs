@@ -111,54 +111,16 @@ namespace FamilyManager
 
                 public void LayoutSubviews( CGRect parentBounds )
                 {
+                    nfloat cellWidth = parentBounds.Width * .98f;
+
                     if ( Family != null )
                     {
-                        // set the title (their last name)
-                        string title = Family.Name;
-
-                        // create and add the person entry. First see if they're an adult or child
-                        string adultMembersText = string.Empty;
-                        string childMembersText = string.Empty;
-                        if ( Family.FamilyMembers.Count > 0 )
-                        {
-                            // first do adults
-                            adultMembersText = "Adults: ";
-                            adultMembersText += FamilyView.GetMembersOfTypeString( Family.FamilyMembers, Config.Instance.FamilyMemberAdultGroupRole.Id );
-
-                            // now add kids
-                            childMembersText = "Children: ";
-                            childMembersText += FamilyView.GetMembersOfTypeString( Family.FamilyMembers, Config.Instance.FamilyMemberChildGroupRole.Id );
-                        }
-
-                        // Create the first address line
-                        string address1Text = Strings.General_NoAddress;
-                        string address2Text = string.Empty;
-
-                        if ( Family.HomeLocation != null )
-                        {
-                            address1Text = Family.HomeLocation.Street1;
-
-                            // make sure the remainder exists
-                            if ( string.IsNullOrWhiteSpace( Family.HomeLocation.City ) == false &&
-                                 string.IsNullOrWhiteSpace( Family.HomeLocation.State ) == false &&
-                                 string.IsNullOrWhiteSpace( Family.HomeLocation.PostalCode ) == false )
-                            {
-                                address2Text = Family.HomeLocation.City + ", " +
-                                Family.HomeLocation.State + " " +
-                                Family.HomeLocation.PostalCode;
-                            }
-                            else
-                            {
-                                address2Text = string.Empty;
-                            }
-                        }
-
-                        FamilyView.FormatCell( parentBounds.Width * .98f, title, adultMembersText, childMembersText, address1Text, address2Text );
+                        FamilyView.FormatCell( cellWidth, Family );
                     }
                     else
                     {
                         // since there's no family, have it display a "not found" result
-                        FamilyView.FormatCell( parentBounds.Width * .98f, Strings.Search_NoResults_Title, Strings.Search_NoResults_Suggestions, "", Strings.Search_NoResults_Suggestion1, Strings.Search_NoResults_Suggestion2 );
+                        FamilyView.FormatCell( cellWidth, Strings.Search_NoResults_Title, Strings.Search_NoResults_Suggestions, "", Strings.Search_NoResults_Suggestion1, Strings.Search_NoResults_Suggestion2 );
                     }
 
                     Button.Bounds = FamilyView.Bounds;
