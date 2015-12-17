@@ -564,7 +564,7 @@ namespace FamilyManager
 
                 public UILabel FamilyName { get; set; }
                 TableSource ParentTableSource { get; set; }
-                UIButton AddFamilyMemberButton { get; set; }
+                UIButton EditGuestFamilyButton { get; set; }
                 Rock.Client.GuestFamily GuestFamily { get; set; }
                 public UIView Container { get; set; }
 
@@ -592,18 +592,18 @@ namespace FamilyManager
                     AddSubview( Container );
 
                     //AddFamilyIcon = new AddFamilyEntry( parentTableSource );
-                    AddFamilyMemberButton = UIButton.FromType( UIButtonType.System );
-                    AddFamilyMemberButton.Layer.AnchorPoint = CGPoint.Empty;
-                    AddFamilyMemberButton.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( "Bh", 64 );
-                    AddFamilyMemberButton.SetTitle( "", UIControlState.Normal );
-                    AddFamilyMemberButton.SetTitleColor( Theme.GetColor( Config.Instance.VisualSettings.LabelStyle.TextColor ), UIControlState.Normal );
-                    AddFamilyMemberButton.Layer.CornerRadius = 4;
-                    AddFamilyMemberButton.TouchUpInside += (object sender, EventArgs e) => 
+                    EditGuestFamilyButton = UIButton.FromType( UIButtonType.System );
+                    EditGuestFamilyButton.Layer.AnchorPoint = CGPoint.Empty;
+                    EditGuestFamilyButton.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( "Bh", 64 );
+                    EditGuestFamilyButton.SetTitle( "", UIControlState.Normal );
+                    EditGuestFamilyButton.SetTitleColor( Theme.GetColor( Config.Instance.VisualSettings.LabelStyle.TextColor ), UIControlState.Normal );
+                    EditGuestFamilyButton.Layer.CornerRadius = 4;
+                    EditGuestFamilyButton.TouchUpInside += (object sender, EventArgs e) => 
                         {
-                            ParentTableSource.AddMemberToFamily( AddFamilyMemberButton, GuestFamily.Id, GuestFamily.Name );
+                            ParentTableSource.EditGuestFamily( GuestFamily.Id );
                         };
 
-                    AddFamilyMemberButton.SizeToFit( );
+                    EditGuestFamilyButton.SizeToFit( );
                 }
 
                 public void SetFamily( Rock.Client.Family primaryFamily, Rock.Client.GuestFamily guestFamily )
@@ -631,7 +631,7 @@ namespace FamilyManager
                     Container.AddSubview( FamilyName );
 
                     // add our "Add Family Member" button
-                    Container.AddSubview( AddFamilyMemberButton );
+                    Container.AddSubview( EditGuestFamilyButton );
 
                     // setup our list
                     Members = new List<PersonEntry>( guestFamily.FamilyMembers.Count );
@@ -691,12 +691,12 @@ namespace FamilyManager
 
 
                     // now set the add family button
-                    AddFamilyMemberButton.Bounds = new CGRect( 0, 0, AddMemberWidth, AddMemberWidth );
+                    EditGuestFamilyButton.Bounds = new CGRect( 0, 0, AddMemberWidth, AddMemberWidth );
 
                     // set the container bounds
                     Container.Bounds = new CGRect( 0, 0, cellWidth, Members[ i - 1 ].Button.Frame.Bottom + ySpacing );
 
-                    AddFamilyMemberButton.Layer.Position = new CGPoint( cellWidth - AddFamilyMemberButton.Bounds.Width, (Container.Bounds.Height - AddMemberWidth) / 2 );
+                    EditGuestFamilyButton.Layer.Position = new CGPoint( cellWidth - EditGuestFamilyButton.Bounds.Width, (Container.Bounds.Height - AddMemberWidth) / 2 );
 
                     // set the cell bounds
                     Bounds = new CGRect( 0, 0, cellWidth, Container.Bounds.Height * 1.10f );
@@ -781,6 +781,11 @@ namespace FamilyManager
 
                 // create a list for the guest family cell heights, since they're variable
                 GuestFamilyCellHeight = new List<nfloat>( );
+            }
+
+            public void EditGuestFamily( int guestFamilyId )
+            {
+                Parent.EditGuestFamily( guestFamilyId );
             }
 
             /// <summary>
@@ -1757,6 +1762,19 @@ namespace FamilyManager
                             } );
                     } );
             }
+        }
+
+        public void EditGuestFamily( int guestFamilyId )
+        {
+            // grab the guest family
+            RockApi.Get_Groups_GetFamily( guestFamilyId, 
+                delegate(System.Net.HttpStatusCode statusCode, string statusDescription, Rock.Client.Family model )
+                {
+                    if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) == true )
+                    {
+                        Parent.PresentFamilyPage( model );
+                    }
+                });
         }
 
         public void HandleAddExistingPerson( int workingFamilyId )

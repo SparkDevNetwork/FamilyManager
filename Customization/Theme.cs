@@ -251,7 +251,7 @@ namespace Customization
                     qualifiedUrl = imageUrl;
                 }
 
-                FileCache.Instance.DownloadFileToCache( qualifiedUrl, imageFileName, onResult );
+                FileCache.Instance.DownloadFileToCache( qualifiedUrl, imageFileName, FileCache.CacheFileNoExpiration, onResult );
             }
         }
 

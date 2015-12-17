@@ -105,6 +105,8 @@ namespace FamilyManager
         public static string PersonInfo_MissingInfo_Header = "Missing Information";
         public static string PersonInfo_MissingInfo_Message = "At least one required field is empty, or there is an invalid email address. Double check and try again.";
 
+        public static string PersonInfo_AllowCheckinsBy_Header = "Allow Checkins By";
+
         public static string FamilyInfo_AddFamilyMemberHeader = "Add Family Member";
         public static string FamilyInfo_AddFamilyMemberBody = "What Do You Want To Add?";
         public static string FamilyInfo_AddNewPerson = "Add New Person";

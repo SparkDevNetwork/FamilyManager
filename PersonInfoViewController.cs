@@ -162,7 +162,8 @@ namespace FamilyManager
 
                 AllowedCheckinsHeader = new UILabel( );
                 AllowedCheckinsHeader.Layer.AnchorPoint = CGPoint.Empty;
-                AllowedCheckinsHeader.Text = "Allow Checkins By";
+                AllowedCheckinsHeader.Text = Strings.PersonInfo_AllowCheckinsBy_Header;
+                AllowedCheckinsHeader.Font = FontManager.GetFont( Settings.General_BoldFont, Config.Instance.VisualSettings.SmallFontSize );
                 AllowedCheckinsHeader.SizeToFit( );
                 Theme.StyleLabel( AllowedCheckinsHeader, Config.Instance.VisualSettings.LabelStyle );
                 RootView.AddSubview( AllowedCheckinsHeader );
@@ -688,7 +689,7 @@ namespace FamilyManager
                     // setup the header
                     AllowedCheckinsHeader.Hidden = false;
                     AllowedCheckinsHeader.Layer.Position = new CGPoint( 10, controlYPos );
-                    controlYPos = AllowedCheckinsHeader.Frame.Bottom + verticalControlSpacing / 2;
+                    controlYPos = AllowedCheckinsHeader.Frame.Bottom;
 
                     // add in each entry
                     int i;
@@ -931,7 +932,7 @@ namespace FamilyManager
                     // setup the header
                     AllowedCheckinsHeader.Hidden = false;
                     AllowedCheckinsHeader.Layer.Position = new CGPoint( 10, controlYPos );
-                    controlYPos = AllowedCheckinsHeader.Frame.Bottom + verticalControlSpacing / 2;
+                    controlYPos = AllowedCheckinsHeader.Frame.Bottom;
 
                     // add in each entry
                     int i;
