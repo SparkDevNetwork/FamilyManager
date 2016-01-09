@@ -252,7 +252,9 @@ namespace FamilyManager
 
                     void DownloadProfilePic( int photoId )
                     {
-                        RockApi.Get_GetImage( photoId.ToString( ), (uint)PersonEntry.ImageSize * 2, delegate(System.Net.HttpStatusCode statusCode, string statusDescription, MemoryStream imageStream )
+                        uint imageDimensions = (uint)PersonEntry.ImageSize * 2;
+
+                        RockApi.Get_GetImage( photoId.ToString( ), imageDimensions, imageDimensions, delegate(System.Net.HttpStatusCode statusCode, string statusDescription, MemoryStream imageStream )
                             {
                                 Rock.Mobile.Threading.Util.PerformOnUIThread( delegate
                                     {

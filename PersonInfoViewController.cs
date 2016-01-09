@@ -1110,7 +1110,7 @@ namespace FamilyManager
             {
                 ActivePanel.TouchesEnded( );
 
-                if ( ActivePanel.IsInfoDirty( WorkingPerson, WorkingPhoneNumber ) )
+                if ( ActivePanel.IsInfoDirty( WorkingPerson, WorkingPhoneNumber ) || ProfileImageViewDirty == true )
                 {
                     ConfirmCancel( );
                 }
@@ -1280,7 +1280,7 @@ namespace FamilyManager
                  (posInMain.Y < 0 || posInMain.Y > MainPanel.Bounds.Height) )
             {
                 // confirm they want to cancel
-                if ( ActivePanel.IsInfoDirty( WorkingPerson, WorkingPhoneNumber ) )
+                if ( ActivePanel.IsInfoDirty( WorkingPerson, WorkingPhoneNumber ) || ProfileImageViewDirty == true )
                 {
                     ConfirmCancel( );
                 }
@@ -1341,6 +1341,9 @@ namespace FamilyManager
                                     {
                                         if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) == true )
                                         {
+                                            // there's now no way the profile image could be dirty
+                                            ProfileImageViewDirty = false;
+
                                             DismissAnimated( true );
                                         }
                                         else
