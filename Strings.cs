@@ -50,6 +50,7 @@ namespace FamilyManager
         public static string General_Zip = "Zip";
 
         public static string General_FirstName = "First Name";
+        public static string General_MiddleName = "Middle Name";
         public static string General_LastName = "Last Name";
         public static string General_Email = "Email Address";
         public static string General_Birthday = "Birthday";

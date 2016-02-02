@@ -67,6 +67,7 @@ namespace FamilyManager
             protected static nfloat verticalControlSpacing = 30;
 
             protected Dynamic_UITextField FirstName { get; set; }
+            protected Dynamic_UITextField MiddleName { get; set; }
             protected Dynamic_UITextField LastName { get; set; }
 
             protected Dynamic_UIDatePicker BirthdatePicker { get; set; }
@@ -101,6 +102,7 @@ namespace FamilyManager
             public virtual void Copy( BaseMemberPanel rhs )
             {
                 FirstName.SetCurrentValue( rhs.FirstName.GetCurrentValue( ).ToUpperWords( ) );
+                MiddleName.SetCurrentValue( rhs.MiddleName.GetCurrentValue( ).ToUpperWords( ) );
                 LastName.SetCurrentValue( rhs.LastName.GetCurrentValue( ).ToUpperWords( ) );
 
                 BirthdatePicker.SetCurrentValue( rhs.BirthdatePicker.GetCurrentValue( ) );
@@ -138,6 +140,11 @@ namespace FamilyManager
                 FirstName.GetTextField( ).AutocapitalizationType = UITextAutocapitalizationType.Words;
                 FirstName.GetTextField( ).AutocorrectionType = UITextAutocorrectionType.No;
                 FirstName.AddToView( RootView );
+
+                MiddleName = new Dynamic_UITextField( parentViewController, RootView, Strings.General_MiddleName, false, false );
+                MiddleName.GetTextField( ).AutocapitalizationType = UITextAutocapitalizationType.Words;
+                MiddleName.GetTextField( ).AutocorrectionType = UITextAutocorrectionType.No;
+                MiddleName.AddToView( RootView );
 
                 LastName = new Dynamic_UITextField( parentViewController, RootView, Strings.General_LastName, false, true );
                 LastName.GetTextField( ).AutocapitalizationType = UITextAutocapitalizationType.Words;
@@ -180,6 +187,7 @@ namespace FamilyManager
                                                 List<Rock.Client.Family> allowedCheckinList )
             {
                 FirstName.SetCurrentValue( workingPerson.NickName );
+                MiddleName.SetCurrentValue( workingPerson.MiddleName );
                 LastName.SetCurrentValue( workingPerson.LastName );
 
                 if ( workingPerson.BirthDate.HasValue )
@@ -258,6 +266,7 @@ namespace FamilyManager
             public virtual void UIInfoToPerson( Rock.Client.Person workingPerson, Rock.Client.PhoneNumber workingPhoneNumber )
             {
                 workingPerson.NickName = FirstName.GetCurrentValue( ).ToUpperWords( );
+                workingPerson.MiddleName = MiddleName.GetCurrentValue( ).ToUpperWords( );
                 workingPerson.LastName = LastName.GetCurrentValue( ).ToUpperWords( );
                 workingPerson.Email = EmailAddress.GetCurrentValue( );
 
@@ -297,6 +306,13 @@ namespace FamilyManager
                 // if anything in the UI is different from the objects, then yeah, it's dirty
                 string workingNickName = workingPerson.NickName == null ? "" : workingPerson.NickName;
                 if ( workingNickName != FirstName.GetCurrentValue( ) )
+                {
+                    return true;
+                }
+
+                // check middle name
+                string workingMiddleName = workingPerson.MiddleName == null ? "" : workingPerson.MiddleName;
+                if ( workingMiddleName != MiddleName.GetCurrentValue( ) )
                 {
                     return true;
                 }
@@ -429,6 +445,7 @@ namespace FamilyManager
             {
                 BirthdatePicker.ResignFirstResponder( );
                 FirstName.ResignFirstResponder( );
+                MiddleName.ResignFirstResponder( );
                 LastName.ResignFirstResponder( );
                 PhoneNumber.ResignFirstResponder( );
                 EmailAddress.ResignFirstResponder( );
@@ -442,8 +459,12 @@ namespace FamilyManager
                 FirstName.Layer.Position = new CGPoint( 10, 30 );
                 FirstName.ShouldAdjustForKeyboard( true );
 
+                MiddleName.ViewDidLayoutSubviews( legalBounds );
+                MiddleName.Layer.Position = new CGPoint( 10, FirstName.Frame.Bottom + verticalControlSpacing );
+                MiddleName.ShouldAdjustForKeyboard( true );
+
                 LastName.ViewDidLayoutSubviews( legalBounds );
-                LastName.Layer.Position = new CGPoint( 10, FirstName.Frame.Bottom + verticalControlSpacing );
+                LastName.Layer.Position = new CGPoint( 10, MiddleName.Frame.Bottom + verticalControlSpacing );
                 LastName.ShouldAdjustForKeyboard( true );
 
                 BirthdatePicker.ViewDidLayoutSubviews( legalBounds );
