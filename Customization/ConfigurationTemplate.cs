@@ -160,8 +160,13 @@ namespace Customization
                 }
                 catch
                 {
+                    Console.WriteLine( "WARNING! Configuration Template Deserialization FAILED!" );
                     configTemplate = null;
                 }
+            }
+            else
+            {
+                Console.WriteLine( "WARNING! Configuration Template Defined Value is EMPTY!" );
             }
 
             // if we failed to get it (maybe the templateDefinedValue is blank?) return an empty one.

@@ -75,7 +75,6 @@ namespace FamilyManager
         public string RockURL { get; set; }
 
         // The key used for hitting end points on Rock. The user will still have to pass a login check.
-        //public string RockAuthorizationKey = "fknuHvzQS7tFK2XN7tJ5jhqS";
         public string RockAuthorizationKey { get; set; }
 
         // Campuses available
