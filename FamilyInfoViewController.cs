@@ -460,16 +460,16 @@ namespace FamilyManager
                     public UILabel Name { get; set; }
                     public UILabel AgeLabel { get; set; } //this will be either adult or child
                     public bool CanCheckin { get; set; }
-                    public int PersonAliasId { get; set; }
+                    public int PersonId { get; set; }
 
                     // These are the members of the primary family
                     public List<Rock.Client.GroupMember> PrimaryFamilyMembers { get; set; }
 
-                    public PersonEntry( string personName, int personAliasId, bool canCheckin, string roleInFamily, List<Rock.Client.GroupMember> primaryFamilyMembers )
+                    public PersonEntry( string personName, int personId, bool canCheckin, string roleInFamily, List<Rock.Client.GroupMember> primaryFamilyMembers )
                     {
                         PrimaryFamilyMembers = primaryFamilyMembers;
 
-                        PersonAliasId = personAliasId;
+                        PersonId = personId;
 
                         CanCheckin = canCheckin;
 
@@ -511,7 +511,7 @@ namespace FamilyManager
                                     int pendingRemovals = 0;
                                     foreach( Rock.Client.GroupMember member in primaryFamilyMembers )
                                     {
-                                        FamilyManagerApi.RemoveKnownRelationship( member.Person.PrimaryAliasId.Value, PersonAliasId, Config.Instance.CanCheckInGroupRole.Id, delegate
+                                        FamilyManagerApi.RemoveKnownRelationship( member.Person.Id, PersonId, Config.Instance.CanCheckInGroupRole.Id, delegate
                                             {
                                                 // once we hear back from all the requests, toggle the button
                                                 pendingRemovals++;
@@ -529,7 +529,7 @@ namespace FamilyManager
                                 else
                                 {
                                     // simply bind them to the first person
-                                    FamilyManagerApi.UpdateKnownRelationship( primaryFamilyMembers[ 0 ].Person.PrimaryAliasId.Value, PersonAliasId, Config.Instance.CanCheckInGroupRole.Id, delegate
+                                    FamilyManagerApi.UpdateKnownRelationship( primaryFamilyMembers[ 0 ].Person.Id, PersonId, Config.Instance.CanCheckInGroupRole.Id, delegate
                                         {
                                             Button.Enabled = true;
                                             CanCheckin = !CanCheckin;
@@ -642,7 +642,7 @@ namespace FamilyManager
                     foreach ( Rock.Client.GuestFamily.Member familyMember in guestFamily.FamilyMembers )
                     {
                         // create and add the person entry
-                        PersonEntry personEntry = new PersonEntry( familyMember.FirstName, familyMember.PersonAliasId, familyMember.CanCheckin, familyMember.Role, primaryFamily.FamilyMembers );
+                        PersonEntry personEntry = new PersonEntry( familyMember.FirstName, familyMember.Id, familyMember.CanCheckin, familyMember.Role, primaryFamily.FamilyMembers );
                         Members.Add( personEntry );
 
                         // add this person to the cell
@@ -1607,18 +1607,18 @@ namespace FamilyManager
                         // make appropriate adjustments
 
                         // default to the first PERSON, in case we can't find any children
-                        int? guestPrimaryValueId = newGuestFamily.FamilyMembers[ 0 ].Person.PrimaryAliasId;
+                        int guestId = newGuestFamily.FamilyMembers[ 0 ].Person.Id;
 
                         foreach( Rock.Client.GroupMember guestMember in newGuestFamily.FamilyMembers )
                         {
                             if( guestMember.GroupRole.Id == Config.Instance.FamilyMemberChildGroupRole.Id )
                             {
-                                guestPrimaryValueId = guestMember.Person.PrimaryAliasId;
+                                guestId = guestMember.Person.Id;
                                 break;
                             }
                         }
 
-                        FamilyManagerApi.UpdateKnownRelationship( Family.FamilyMembers[ 0 ].Person.PrimaryAliasId, guestPrimaryValueId, Config.Instance.CanCheckInGroupRole.Id, 
+                        FamilyManagerApi.UpdateKnownRelationship( Family.FamilyMembers[ 0 ].Person.Id, guestId, Config.Instance.CanCheckInGroupRole.Id, 
                             delegate(HttpStatusCode statusCode, string statusDescription )
                             {
                                 if( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) )

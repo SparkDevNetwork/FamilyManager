@@ -108,33 +108,25 @@ namespace FamilyManager
 
         public static void AddPersonToFamily( Rock.Client.Person person, int childAdultRoleMemberId, int toFamilyId, bool removeFromOtherFamilies, HttpRequest.RequestResult result )
         {
-            ApplicationApi.ResolvePersonAliasId( person, 
-                delegate( int personId )
-                {
-                    // setup the oData. childAdultRoleMemberId describes whether this person should be an adult or child in the family.
-                    string oDataFilter = string.Format( "?personId={0}&familyId={1}&groupRoleId={2}&removeFromOtherFamilies={3}", personId, toFamilyId, childAdultRoleMemberId, removeFromOtherFamilies );
+            // setup the oData. childAdultRoleMemberId describes whether this person should be an adult or child in the family.
+            string oDataFilter = string.Format( "?personId={0}&familyId={1}&groupRoleId={2}&removeFromOtherFamilies={3}", person.Id, toFamilyId, childAdultRoleMemberId, removeFromOtherFamilies );
 
-                    RockApi.Post_People_AddExistingPersonToFamily( oDataFilter, result );
-                } );
+            RockApi.Post_People_AddExistingPersonToFamily( oDataFilter, result );
         }
 
-        public static void UpdateOrAddPersonAttribute( int? personAliasId, string key, string value, HttpRequest.RequestResult resultHandler )
+        public static void UpdateOrAddPersonAttribute( int personId, string key, string value, HttpRequest.RequestResult resultHandler )
         {
-            ApplicationApi.ResolvePersonAliasId( personAliasId, 
-                delegate(int personId )
-                {
-                    string urlEncodedValue = System.Net.WebUtility.UrlEncode( value );
-                    string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", personId, key, urlEncodedValue );
+            string urlEncodedValue = System.Net.WebUtility.UrlEncode( value );
+            string oDataFilter = string.Format( "/{0}?attributeKey={1}&attributeValue={2}", personId, key, urlEncodedValue );
 
-                    if( string.IsNullOrWhiteSpace( value ) )
-                    {
-                        RockApi.Delete_People_AttributeValue( oDataFilter, resultHandler );
-                    }
-                    else
-                    {
-                        RockApi.Post_People_AttributeValue( oDataFilter, resultHandler );
-                    }
-                } );
+            if( string.IsNullOrWhiteSpace( value ) )
+            {
+                RockApi.Delete_People_AttributeValue( oDataFilter, resultHandler );
+            }
+            else
+            {
+                RockApi.Post_People_AttributeValue( oDataFilter, resultHandler );
+            }
         }
 
         public static void UpdateOrAddFamilyAttribute( int familyId, string key, string value, HttpRequest.RequestResult resultHandler )
@@ -146,38 +138,17 @@ namespace FamilyManager
             RockApi.Post_Groups_AttributeValue( oDataFilter, resultHandler );
         }
 
-        public static void UpdateKnownRelationship( int? personAliasId, int? relatedPersonAliasId, int relationshipRoleId, HttpRequest.RequestResult resultHandler )
+        public static void UpdateKnownRelationship( int personId, int relatedPersonId, int relationshipRoleId, HttpRequest.RequestResult resultHandler )
         {
-            // get the ID for the main person
-            ApplicationApi.ResolvePersonAliasId( personAliasId, 
-                delegate(int personId )
-                {
-                    // and the related person
-                    ApplicationApi.ResolvePersonAliasId( relatedPersonAliasId, 
-                        delegate(int relatedPersonId )
-                        {
-                            string oDataFilter = string.Format( "?personId={0}&relatedPersonId={1}&relationshipRoleId={2}", personId, relatedPersonId, relationshipRoleId );
-
-                            RockApi.Post_GroupMembers_KnownRelationships( oDataFilter, resultHandler );
-                        });
-                } );
+            string oDataFilter = string.Format( "?personId={0}&relatedPersonId={1}&relationshipRoleId={2}", personId, relatedPersonId, relationshipRoleId );
+            RockApi.Post_GroupMembers_KnownRelationships( oDataFilter, resultHandler );
         }
 
-        public static void RemoveKnownRelationship( int? personAliasId, int? relatedPersonAliasId, int relationshipRoleId, HttpRequest.RequestResult resultHandler )
+        public static void RemoveKnownRelationship( int personId, int relatedPersonId, int relationshipRoleId, HttpRequest.RequestResult resultHandler )
         {
-            // get the ID for the main person
-            ApplicationApi.ResolvePersonAliasId( personAliasId, 
-                delegate(int personId )
-                {
-                    // and the related person
-                    ApplicationApi.ResolvePersonAliasId( relatedPersonAliasId, 
-                        delegate(int relatedPersonId )
-                        {
-                            string oDataFilter = string.Format( "?personId={0}&relatedPersonId={1}&relationshipRoleId={2}", personId, relatedPersonId, relationshipRoleId );
+            string oDataFilter = string.Format( "?personId={0}&relatedPersonId={1}&relationshipRoleId={2}", personId, relatedPersonId, relationshipRoleId );
 
-                            RockApi.Delete_GroupMembers_KnownRelationships( oDataFilter, resultHandler );
-                        });
-                } );
+            RockApi.Delete_GroupMembers_KnownRelationships( oDataFilter, resultHandler );
         }
 
         //public const string ConfigurationTemplateDefinedTypeGuid = "0F48CB3F-8A48-249A-412A-2DCA7648706F";
@@ -273,7 +244,7 @@ namespace FamilyManager
                             foreach ( KeyValuePair<string, string> attribValue in attributes )
                             {
                                 // just fire and forget these values.
-                                FamilyManagerApi.UpdateOrAddPersonAttribute( person.PrimaryAliasId.HasValue == true ? person.PrimaryAliasId.Value : person.Id, attribValue.Key, attribValue.Value, null );
+                                FamilyManagerApi.UpdateOrAddPersonAttribute( person.Id, attribValue.Key, attribValue.Value, null );
                             }
 
                             // are we deleting an existing number?
@@ -317,14 +288,14 @@ namespace FamilyManager
                         // see if we should set their first time visit status
                         if( Config.Instance.RecordFirstVisit == true )
                         {
-                            FamilyManagerApi.UpdateOrAddPersonAttribute( person.PrimaryAliasId.HasValue == true ? person.PrimaryAliasId.Value : person.Id, Config.Instance.FirstTimeVisitAttrib.Key, DateTime.Now.ToString( ), null );
+                            FamilyManagerApi.UpdateOrAddPersonAttribute( person.Id, Config.Instance.FirstTimeVisitAttrib.Key, DateTime.Now.ToString( ), null );
                         }
 
                         // now update pending attributes.
                         foreach( KeyValuePair<string, string> attribValue in attributes )
                         {
                             // just fire and forget these values.
-                            FamilyManagerApi.UpdateOrAddPersonAttribute( person.PrimaryAliasId.HasValue == true ? person.PrimaryAliasId.Value : person.Id, attribValue.Key, attribValue.Value, null );
+                            FamilyManagerApi.UpdateOrAddPersonAttribute( person.Id, attribValue.Key, attribValue.Value, null );
                         }
 
                         // if there's a phone number to send, send it.
