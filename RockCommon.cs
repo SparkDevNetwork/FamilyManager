@@ -48,7 +48,7 @@ namespace FamilyManager
             homeLocation.GroupLocationTypeValueId = GroupLocationTypeHomeValueId;
 
             // for the address location, default the country to the built in country code.
-            homeLocation.Location = new Location();
+            homeLocation.Location = new Rock.Client.Location();
             homeLocation.Location.Country = CountryCode;
 
             // populate it

@@ -118,6 +118,9 @@ namespace FamilyManager
         List<Rock.Client.DefinedValue> ConfigurationTemplates;
         List<Rock.Client.Campus> Campuses;
 
+        UILabel CampusSwitchLabel { get; set; }
+        UISwitch CampusSwitch { get; set; }
+
         UIButton Sync { get; set; }
         UILabel SyncResultLabel { get; set; }
         UIBlockerView BlockerView { get; set; }
@@ -157,6 +160,8 @@ namespace FamilyManager
             RockUrlField.Text = Config.Instance.RockURL;
             RockUrlField.AutocorrectionType = UITextAutocorrectionType.No;
             RockUrlField.AutocapitalizationType = UITextAutocapitalizationType.None;
+            RockUrlField.InputAssistantItem.LeadingBarButtonGroups = null;
+            RockUrlField.InputAssistantItem.TrailingBarButtonGroups = null;
             Theme.StyleTextField( RockUrlField, Config.Instance.VisualSettings.TextFieldStyle );
             RockUrlField.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( Settings.General_RegularFont, Config.Instance.VisualSettings.MediumFontSize );
             View.AddSubview( RockUrlField );
@@ -177,9 +182,27 @@ namespace FamilyManager
             RockAuthKeyField.Text = Config.Instance.RockAuthorizationKey;
             RockAuthKeyField.AutocorrectionType = UITextAutocorrectionType.No;
             RockAuthKeyField.AutocapitalizationType = UITextAutocapitalizationType.None;
+            RockAuthKeyField.InputAssistantItem.LeadingBarButtonGroups = null;
+            RockAuthKeyField.InputAssistantItem.TrailingBarButtonGroups = null;
             Theme.StyleTextField( RockAuthKeyField, Config.Instance.VisualSettings.TextFieldStyle );
             RockAuthKeyField.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( Settings.General_RegularFont, Config.Instance.VisualSettings.MediumFontSize );
             View.AddSubview( RockAuthKeyField );
+
+            // setup the campus switch label
+            CampusSwitchLabel = new UILabel( );
+            CampusSwitchLabel.Layer.AnchorPoint = CGPoint.Empty;
+            CampusSwitchLabel.Text = "Autodetect Campus";
+            Theme.StyleLabel( CampusSwitchLabel, Config.Instance.VisualSettings.LabelStyle );
+            CampusSwitchLabel.Font = Rock.Mobile.PlatformSpecific.iOS.Graphics.FontManager.GetFont( Settings.General_LightFont, Config.Instance.VisualSettings.MediumFontSize );
+            CampusSwitchLabel.SizeToFit( );
+            View.AddSubview( CampusSwitchLabel );
+
+            // default the campus switch to whatever the autodetect preference is
+            CampusSwitch = new UISwitch( );
+            CampusSwitch.Layer.AnchorPoint = CGPoint.Empty;
+            CampusSwitch.OnTintColor = Theme.GetColor( Config.Instance.VisualSettings.ToggleStyle.ActiveColor );
+            CampusSwitch.On = Config.Instance.AutoDetectCampus;
+            View.AddSubview( CampusSwitch );
 
 
             // Campus Label and Table
@@ -196,7 +219,6 @@ namespace FamilyManager
             CampusTableView.Source = new CampusTableData() { Parent = this };
             CampusTableView.Layer.CornerRadius = 4;
             View.AddSubview( CampusTableView );
-
 
 
             // Template Label and Table
@@ -293,6 +315,17 @@ namespace FamilyManager
                             Config.Instance.CommitRockSync( );
 
                             // take the new campus
+                            if( CampusSwitch.On )
+                            {
+                                Config.Instance.AutoDetectCampus = true;
+                            }
+                            else
+                            {
+                                Config.Instance.AutoDetectCampus = false;
+                            }
+
+                            // go ahead and set the campus index to what they chose. 
+                            // If auto-detect is on, it'll override it next time they run
                             int campusIndex = CampusTableView.IndexPathForSelectedRow.Row;
                             Config.Instance.SelectedCampusIndex = campusIndex;
 
@@ -364,8 +397,8 @@ namespace FamilyManager
         public void RowSelected( )
         {
             // the only way we can allow the Save button to be enabled is when the user
-            // selects BOTH entries
-            if ( CampusTableView.IndexPathForSelectedRow != null && TemplateTableView.IndexPathForSelectedRow != null )
+            // selects BOTH entries (for campus, either turning on "Auto detect" or picking one)
+            if ( (CampusTableView.IndexPathForSelectedRow != null || CampusSwitch.On == true ) && TemplateTableView.IndexPathForSelectedRow != null )
             {
                 ToggleSaveButton( true );
             }
@@ -541,14 +574,22 @@ namespace FamilyManager
 
 
             // set the campus table and center its label above it
-            CampusesLabel.Layer.Position = new CGPoint( RockUrlTitle.Layer.Position.X, Sync.Frame.Bottom + 75 );
+            CampusesLabel.Layer.Position = new CGPoint( RockUrlTitle.Layer.Position.X, Sync.Frame.Bottom + 60 );
 
+            // table
             CampusTableView.Layer.Position = new CGPoint( RockUrlTitle.Layer.Position.X, CampusesLabel.Frame.Bottom );
             CampusTableView.Bounds = new CGRect( 0, 0, 200, 300 );
 
 
+            nfloat switchWidth = CampusSwitchLabel.Bounds.Width + CampusSwitch.Bounds.Width + 10;
+            nfloat switchXPos = (CampusTableView.Bounds.Width - switchWidth) / 2;
+
+            CampusSwitchLabel.Layer.Position = new CGPoint( RockUrlTitle.Layer.Position.X + switchXPos, View.Bounds.Height * .85f);
+            CampusSwitch.Layer.Position = new CGPoint( CampusSwitchLabel.Frame.Right + 10, View.Bounds.Height * .85f );
+
+
             // set the template table and center ITS label as well
-            TemplateLabel.Layer.Position = new CGPoint( View.Bounds.Width - 300, Sync.Frame.Bottom + 75 );
+            TemplateLabel.Layer.Position = new CGPoint( View.Bounds.Width - 300, Sync.Frame.Bottom + 60 );
 
             TemplateTableView.Layer.Position = new CGPoint( View.Bounds.Width - 300, TemplateLabel.Frame.Bottom );
             TemplateTableView.Bounds = new CGRect( 0, 0, 200, 300 );

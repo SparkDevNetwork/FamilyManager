@@ -32,6 +32,9 @@ namespace FamilyManager
 
             // default recording first visits to true.
             RecordFirstVisit = true;
+
+            // default auto-detecting the campus to true.
+            AutoDetectCampus = true;
         }
 
         /// <summary>
@@ -92,6 +95,9 @@ namespace FamilyManager
 
         [JsonProperty]
         public int Version { get; set; }
+
+        [JsonProperty]
+        public bool AutoDetectCampus { get; set; }
 
         [JsonProperty]
         public List<Rock.Client.DefinedValue> MaritalStatus { get; set; }
@@ -251,7 +257,7 @@ namespace FamilyManager
         void GetCampuses( OnComplete onComplete )
         {
             // get the campuses
-            RockApi.Get_Campuses( 
+            RockApi.Get_Campuses( "?$expand=Location",
                 delegate(System.Net.HttpStatusCode statusCode, string statusDescription, List<Rock.Client.Campus> model )
                 {
                     if ( Rock.Mobile.Network.Util.StatusInSuccessRange( statusCode ) == true )

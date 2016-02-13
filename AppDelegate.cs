@@ -38,7 +38,13 @@ namespace FamilyManager
 			
             // make the window visible
             window.MakeKeyAndVisible( );
-			
+
+
+            // start up the delegate and actual location service
+            Location.Location.Instance.OnRegionEnteredDelegate = CoreViewController.RegionEntered;
+
+            Location.Location.Instance.Create( null );
+            			
             return true;
         }
 
@@ -52,7 +58,7 @@ namespace FamilyManager
         {
             Rock.Mobile.Util.Debug.WriteLine("App will enter foreground");
 
-            //CoreViewController.WillEnterForeground( );
+            Location.Location.Instance.EnterForeground( null );
         }
 
         public override void OnResignActivation(UIApplication application)
@@ -63,6 +69,8 @@ namespace FamilyManager
         public override void DidEnterBackground(UIApplication application)
         {
             CoreViewController.DidEnterBackground( );
+
+            Location.Location.Instance.EnterBackground( null );
         }
     }
 }

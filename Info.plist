@@ -33,5 +33,13 @@
 	<true/>
 	<key>CFBundleVersion</key>
 	<string>0</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Allows the campus to be automatically detected.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Allows the campus to be automatically detected.</string>
 </dict>
 </plist>

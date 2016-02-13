@@ -10,6 +10,8 @@ using iOS;
 using Rock.Mobile.PlatformSpecific.iOS.UI;
 using Customization;
 using Rock.Mobile.Network;
+using Rock.Client;
+using System.Linq;
 
 namespace FamilyManager
 {
@@ -157,9 +159,7 @@ namespace FamilyManager
                             FirstRunViewController.DismissViewController( true, null );
                         }
 
-                        // update our theme
-                        ColorNavBar( Config.Instance.VisualSettings.TopHeaderBGColor );
-                        View.BackgroundColor = Theme.GetColor( Config.Instance.VisualSettings.BackgroundColor );
+                        ApplyCurrentConfigSettings( );
 
                         // add the container, so that when we're done with the login it will already be there.
                         PushViewController( ContainerViewController, false );
@@ -172,6 +172,53 @@ namespace FamilyManager
                         DisplayFirstRun( );
                     }
                 } );
+        }
+
+        void ApplyCurrentConfigSettings( )
+        {
+            // update our theme
+            ColorNavBar( Config.Instance.VisualSettings.TopHeaderBGColor );
+            View.BackgroundColor = Theme.GetColor( Config.Instance.VisualSettings.BackgroundColor );
+
+
+            // hook int othe Location service so that if AutoDetect is on, we can get the campus.
+            Location.Location.Instance.OnReadyDelegate = delegate( )
+            {
+                // if preferred, use the location service to detect the campus.
+                if( Config.Instance.AutoDetectCampus == true )
+                {
+                    // feed the locations to track
+                    Location.Location.Instance.BeginAddRegionsForTrack( );
+
+                    foreach( Rock.Client.Campus campus in Config.Instance.Campuses )
+                    {
+                        // make sure it has a valid location
+                        if( campus.Location != null && 
+                            campus.Location.Latitude.HasValue && 
+                            campus.Location.Longitude.HasValue )
+                        {
+                            Location.Location.Instance.AddRegionForTrack( campus.Name, campus.Location.Latitude.Value, campus.Location.Longitude.Value, 1000 );
+                        }
+                    }
+
+                    // and done
+                    Location.Location.Instance.CommitRegionsForTrack( );
+                }
+            };
+        }
+
+        public void RegionEntered( string region )
+        {
+            // find the campus based on the region string provided
+            int i;
+            for( i = 0; i < Config.Instance.Campuses.Count; i++ )
+            {
+                if( Config.Instance.Campuses[ i ].Name == region )
+                {
+                    Config.Instance.SelectedCampusIndex = i;
+                    break;
+                }
+            }   
         }
 
         void ColorNavBar( string topHeaderBGColor )

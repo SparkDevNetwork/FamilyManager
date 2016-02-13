@@ -99,25 +99,46 @@ namespace FamilyManager
             };
             this.NavigationItem.SetLeftBarButtonItems( leftItems, false );
 
+            CreateSubNavigationController( );
 
+            SearchFamiliesViewController = new SearchFamiliesViewController( this );
+            SubNavigationController.PushViewController( SearchFamiliesViewController, true );
+
+            HomeButton.Enabled = false;
+
+            SettingsViewController = new SettingsViewController( this );
+
+            // set our theme
+            CoreViewController.ApplyTheme( this );
+        }
+
+        public override void ViewWillAppear (bool animated)
+        {
+            base.ViewWillAppear (animated);
+
+            UpdateNavBarRightButtons( );
+        }
+
+        void UpdateNavBarRightButtons( )
+        {
             // First setup the campus button, which rests in the upper right
             // of the MainNavigationUI. (We must do it here because the ContainerViewController's
             // NavBar is the active one.)
-            buttonLabel = new NSString( Config.Instance.Campuses[ Config.Instance.SelectedCampusIndex ].Name );
+            NSString buttonLabel = new NSString( Config.Instance.Campuses[ Config.Instance.SelectedCampusIndex ].Name );
 
             UIButton campusButton = new UIButton(UIButtonType.System);
             campusButton.SetTitle( buttonLabel.ToString( ), UIControlState.Normal );
             campusButton.SetTitleColor( Theme.GetColor( Config.Instance.VisualSettings.TopHeaderTextColor ), UIControlState.Normal );
 
             // determine its dimensions
-            buttonSize = buttonLabel.StringSize( campusButton.Font );
+            CGSize buttonSize = buttonLabel.StringSize( campusButton.Font );
             campusButton.Bounds = new CGRect( 0, 0, buttonSize.Width, buttonSize.Height );
 
             // set its callback
             campusButton.TouchUpInside += (object sender, EventArgs e) => 
-                {
-                    //Console.WriteLine( "Tapped!" );
-                };
+            {
+                //Console.WriteLine( "Tapped!" );
+            };
 
             // add a Logout button as well
             buttonLabel = new NSString( "" );
@@ -133,44 +154,33 @@ namespace FamilyManager
 
             // set its callback
             logoutButton.TouchUpInside += (object sender, EventArgs e) => 
-                {
-                    UIAlertController actionSheet = UIAlertController.Create( Strings.General_Logout, 
-                        Strings.General_ConfirmLogout, 
-                        UIAlertControllerStyle.Alert );
+            {
+                UIAlertController actionSheet = UIAlertController.Create( Strings.General_Logout, 
+                    Strings.General_ConfirmLogout, 
+                    UIAlertControllerStyle.Alert );
 
 
-                    UIAlertAction yesAction = UIAlertAction.Create( Strings.General_Yes, UIAlertActionStyle.Default, delegate(UIAlertAction obj) 
-                        {
-                            Parent.DisplayLoginScreen( true );   
-                        } );
+                UIAlertAction yesAction = UIAlertAction.Create( Strings.General_Yes, UIAlertActionStyle.Default, delegate(UIAlertAction obj) 
+                    {
+                        Parent.DisplayLoginScreen( true );   
+                    } );
 
-                    //setup cancel
-                    UIAlertAction cancelAction = UIAlertAction.Create( Strings.General_No, UIAlertActionStyle.Default, delegate
-                        { 
-                            
-                        } );
+                //setup cancel
+                UIAlertAction cancelAction = UIAlertAction.Create( Strings.General_No, UIAlertActionStyle.Default, delegate
+                    { 
 
-                    actionSheet.AddAction( yesAction );
-                    actionSheet.AddAction( cancelAction );
+                    } );
 
-                    PresentViewController( actionSheet, true, null );
-                };
+                actionSheet.AddAction( yesAction );
+                actionSheet.AddAction( cancelAction );
+
+                PresentViewController( actionSheet, true, null );
+            };
 
 
             this.NavigationItem.SetRightBarButtonItems( new UIBarButtonItem[] { new UIBarButtonItem( logoutButton ), new UIBarButtonItem( campusButton ) }, false );
             //
 
-            CreateSubNavigationController( );
-
-            SearchFamiliesViewController = new SearchFamiliesViewController( this );
-            SubNavigationController.PushViewController( SearchFamiliesViewController, true );
-
-            HomeButton.Enabled = false;
-
-            SettingsViewController = new SettingsViewController( this );
-
-            // set our theme
-            CoreViewController.ApplyTheme( this );
         }
 
         public override void ViewDidAppear(bool animated)
